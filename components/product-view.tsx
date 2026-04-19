@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Icon } from './icons';
 import { ProductCard } from './product-card';
@@ -12,6 +13,7 @@ import { fmt } from '@/lib/format';
 type Props = { product: Product | null; related: Product[] };
 
 export function ProductView({ product, related }: Props) {
+  const router = useRouter();
   const { lang, addToCart, toggleWish, wish } = useStore();
   const p = product;
 
@@ -126,7 +128,7 @@ export function ProductView({ product, related }: Props) {
               <button onClick={() => setQty(qty + 1)} style={{ width: 44, height: 52 }} aria-label="+" disabled={outOfStock}><Icon.Plus/></button>
             </div>
             <button
-              className="btn btn-primary btn-lg"
+              className="btn btn-outline btn-lg"
               style={{ flex: 1, height: 52 }}
               disabled={outOfStock}
               onClick={() => { for (let i = 0; i < qty; i++) addToCart(p.id, size, color?.n); }}
@@ -139,6 +141,20 @@ export function ProductView({ product, related }: Props) {
               <Icon.Heart/>
             </button>
           </div>
+
+          <button
+            className="btn btn-primary btn-lg btn-block mt-4"
+            style={{ height: 52 }}
+            disabled={outOfStock}
+            onClick={() => {
+              for (let i = 0; i < qty; i++) addToCart(p.id, size, color?.n);
+              router.push('/commande');
+            }}
+          >
+            {outOfStock
+              ? (lang === 'fr' ? 'Rupture de stock' : 'Out of stock')
+              : (lang === 'fr' ? 'Acheter maintenant' : 'Buy now')}
+          </button>
 
           <div className="mt-8" style={{ borderTop: '1px solid var(--line)', paddingTop: 24 }}>
             {[
