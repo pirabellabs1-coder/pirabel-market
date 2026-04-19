@@ -77,6 +77,11 @@ export function AccountContent({ initialTab, email, profile, orders, wishProduct
       {/* Admin access: no banner on the public /compte page to keep the admin
           door discreet. Admins bookmark /admin directly. */}
 
+      <div className="row wrap gap-3 mb-8">
+        <Link href="/compte/parrainage" className="btn btn-outline btn-sm">🎁 Parrainer un ami · +5 000 FCFA</Link>
+        <Link href="/cartes-cadeaux" className="btn btn-outline btn-sm">Offrir une carte cadeau</Link>
+      </div>
+
       {tab === 'orders' && (
         orders.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60 }}>

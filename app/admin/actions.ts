@@ -4,7 +4,7 @@ import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-import { sendOrderStatusUpdate } from '@/lib/email';
+import { sendOrderStatusUpdate, sendCollaboratorInvite } from '@/lib/email';
 
 async function requireAdmin() {
   const sb = await createClient();
@@ -394,6 +394,12 @@ export async function inviteAdmin(formData: FormData): Promise<{ email: string; 
     .from('profiles')
     .upsert({ id: user.id, first_name, last_name, is_admin: true }, { onConflict: 'id' });
   if (upErr) throw new Error(upErr.message);
+
+  // Send credentials via email if we created a new user with a password.
+  // For existing users we don't send (they already have their password).
+  if (createdPassword) {
+    sendCollaboratorInvite(email, createdPassword).catch((e: unknown) => console.error('[invite email]', e));
+  }
 
   revalidatePath('/admin/clients', 'page');
   return { email, createdPassword };

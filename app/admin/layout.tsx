@@ -26,6 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
         <nav className="admin-nav">
           <Link href="/admin">Tableau de bord</Link>
+          <Link href="/admin/comptabilite">Comptabilité</Link>
           <Link href="/admin/produits">Produits</Link>
           <Link href="/admin/commandes">Commandes</Link>
           <Link href="/admin/categories">Catégories</Link>
@@ -36,6 +37,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/popups">Popups</Link>
           <Link href="/admin/avis">Avis clients</Link>
           <Link href="/admin/newsletter">Newsletter</Link>
+          <div style={{ height: 1, background: 'var(--line)', margin: '10px 12px' }}/>
+          <Link href="/admin/fidelite">Fidélité & VIP</Link>
+          <Link href="/admin/cadeaux">Chèques cadeaux</Link>
           <Link href="/admin/api">API</Link>
         </nav>
         <div style={{ marginTop: 'auto', padding: '20px 0', borderTop: '1px solid var(--line)' }}>

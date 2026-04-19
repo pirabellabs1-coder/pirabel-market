@@ -264,3 +264,28 @@ export async function sendOrderStatusUpdate(order: Order & { status: string }, p
     html: layout(label, inner, label),
   });
 }
+
+export async function sendCollaboratorInvite(email: string, password: string, inviterName?: string) {
+  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://pirabel-one.store';
+  const inner = `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;margin:0 0 12px;">Tu as été ajouté(e) à l&apos;équipe Pirabel.</h1>
+    <p style="font-size:14px;line-height:1.7;color:#2c2821;margin:0 0 24px;">${inviterName ? escape(inviterName) + ' t' : 'T'}&apos;a ajouté(e) comme collaborateur(trice) admin sur la boutique Pirabel. Tu peux désormais gérer les produits, commandes, promos, journal.</p>
+    <div style="margin:24px 0;padding:22px;background:#ede7dc;border-left:3px solid #8a6b3a;">
+      <div style="font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#6b6459;margin-bottom:6px;">Email de connexion</div>
+      <code style="font-family:monospace;font-size:14px;background:#fdfbf7;padding:6px 10px;border:1px solid #d9d2c4;display:inline-block;">${escape(email)}</code>
+      <div style="font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#6b6459;margin:18px 0 6px;">Mot de passe temporaire</div>
+      <code style="font-family:monospace;font-size:16px;background:#fdfbf7;padding:8px 12px;border:1px solid #d9d2c4;display:inline-block;letter-spacing:.08em;">${escape(password)}</code>
+      <p style="font-size:11px;color:#9c9589;margin-top:12px;line-height:1.5;">Change-le dès ta première connexion via « Mot de passe oublié » ou depuis ton compte.</p>
+    </div>
+    <p style="font-size:13px;line-height:1.6;margin-top:24px;">L&apos;accès à l&apos;admin se fait via une URL secrète — demande-la à la personne qui t&apos;a invité(e).</p>
+    <div style="margin-top:28px;text-align:center;">
+      <a href="${site}/connexion" style="display:inline-block;background:#14110d;color:#f7f3ec;padding:16px 36px;text-decoration:none;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;">Se connecter</a>
+    </div>
+  `;
+  await safeSend({
+    from: FROM,
+    to: email,
+    subject: "Bienvenue dans l'équipe Pirabel — tes accès admin",
+    html: layout('Accès admin', inner, 'Nouveau collaborateur'),
+  });
+}

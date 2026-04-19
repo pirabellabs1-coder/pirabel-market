@@ -8,6 +8,7 @@ import { Toast } from '@/components/toast';
 import { WhatsAppFloat } from '@/components/whatsapp-float';
 import { SearchModal } from '@/components/search-modal';
 import { PopupHost } from '@/components/popup-host';
+import { SocialProof } from '@/components/social-proof';
 import { GoogleAnalytics } from '@/components/google-analytics';
 import { getProducts } from '@/lib/db';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -95,9 +96,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Header/>
           {children}
           <Footer/>
-          <CartDrawer/>
+          <CartDrawer products={products}/>
           <SearchModal products={products}/>
           <PopupHost popups={popups}/>
+          <SocialProof/>
           <WhatsAppFloat/>
           <Toast/>
         </StoreProvider>

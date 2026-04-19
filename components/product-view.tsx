@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Icon } from './icons';
 import { ProductCard } from './product-card';
 import { ProductReviews } from './product-reviews';
+import { BackInStock } from './back-in-stock';
 import { useStore } from './store-provider';
 import type { Product } from '@/lib/types';
 import { fmt } from '@/lib/format';
@@ -34,6 +35,25 @@ export function ProductView({ product, related }: Props) {
   const thumbs = [p.img, p.img2, p.img, p.img2].filter((x): x is string => !!x);
   const outOfStock = p.stock === 0;
   const lowStock = typeof p.stock === 'number' && p.stock > 0 && p.stock <= 5;
+
+  useEffect(() => {
+    try {
+      let sid = sessionStorage.getItem('pb_sid');
+      if (!sid) { sid = crypto.randomUUID(); sessionStorage.setItem('pb_sid', sid); }
+      fetch('/api/track-view', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ product_id: p.id, session_id: sid }),
+        keepalive: true,
+      }).catch(() => {});
+      const w = window as unknown as { gtag?: (...args: unknown[]) => void };
+      if (w.gtag) {
+        w.gtag('event', 'view_item', {
+          currency: 'XOF', value: p.price,
+          items: [{ item_id: p.id, item_name: p.fr.name, item_category: p.category, price: p.price }],
+        });
+      }
+    } catch {}
+  }, [p.id, p.price, p.fr.name, p.category]);
 
   return (
     <main>
@@ -120,6 +140,8 @@ export function ProductView({ product, related }: Props) {
               {lang === 'fr' ? `Plus que ${p.stock} exemplaire${(p.stock ?? 0) > 1 ? 's' : ''} disponible${(p.stock ?? 0) > 1 ? 's' : ''}.` : `Only ${p.stock} left in stock.`}
             </p>
           )}
+
+          {outOfStock && <BackInStock productId={p.id}/>}
 
           <div className="mt-8 row gap-3">
             <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--line)', opacity: outOfStock ? 0.5 : 1 }}>

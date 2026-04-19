@@ -3,17 +3,20 @@
 import { useRouter } from 'next/navigation';
 import { Icon } from './icons';
 import { useStore } from './store-provider';
-import { products } from '@/lib/products';
+import { products as localProducts } from '@/lib/products';
 import { fmt } from '@/lib/format';
+import type { Product } from '@/lib/types';
+import { CrossSell } from './cross-sell';
 
-export function CartDrawer() {
+export function CartDrawer({ products }: { products?: Product[] } = {}) {
   const router = useRouter();
   const { bagOpen, closeBag, cart, removeFromCart, setQty, cartSubtotal, lang } = useStore();
 
   if (!bagOpen) return null;
 
+  const catalog = products && products.length > 0 ? products : localProducts;
   const items = cart
-    .map(c => ({ ...c, p: products.find(x => x.id === c.id) }))
+    .map(c => ({ ...c, p: catalog.find(x => x.id === c.id) }))
     .filter((x): x is typeof x & { p: NonNullable<typeof x.p> } => !!x.p);
 
   const onCheckout = () => {
@@ -32,32 +35,37 @@ export function CartDrawer() {
           </div>
           <button onClick={closeBag} aria-label="Fermer"><Icon.X/></button>
         </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: 28 }}>
-          {items.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-              <Icon.Bag s={32}/>
-              <p className="mute mt-4">{lang === 'fr' ? 'Votre sac est vide' : 'Your bag is empty'}</p>
-            </div>
-          ) : items.map(it => (
-            <div key={it.id + (it.size ?? '') + (it.color ?? '')} style={{ display: 'grid', gridTemplateColumns: '80px 1fr auto', gap: 16, paddingBottom: 20, marginBottom: 20, borderBottom: '1px solid var(--line)' }}>
-              <div style={{ aspectRatio: '4/5', overflow: 'hidden' }}>
-                <img src={it.p.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt=""/>
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div style={{ padding: 28 }}>
+            {items.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '80px 20px' }}>
+                <Icon.Bag s={32}/>
+                <p className="mute mt-4">{lang === 'fr' ? 'Votre sac est vide' : 'Your bag is empty'}</p>
               </div>
-              <div>
-                <div className="serif" style={{ fontSize: 15 }}>{it.p[lang].name}</div>
-                <div className="mute" style={{ fontSize: 12, marginTop: 4 }}>{it.p.collection}</div>
-                <div className="row gap-2 mt-4" style={{ border: '1px solid var(--line)', display: 'inline-flex' }}>
-                  <button onClick={() => setQty(it.id, it.qty - 1)} style={{ width: 28, height: 28 }} aria-label="−"><Icon.Minus s={10}/></button>
-                  <span style={{ fontSize: 12, minWidth: 20, textAlign: 'center' }}>{it.qty}</span>
-                  <button onClick={() => setQty(it.id, it.qty + 1)} style={{ width: 28, height: 28 }} aria-label="+"><Icon.Plus s={10}/></button>
+            ) : items.map(it => (
+              <div key={it.id + (it.size ?? '') + (it.color ?? '')} style={{ display: 'grid', gridTemplateColumns: '80px 1fr auto', gap: 16, paddingBottom: 20, marginBottom: 20, borderBottom: '1px solid var(--line)' }}>
+                <div style={{ aspectRatio: '4/5', overflow: 'hidden' }}>
+                  <img src={it.p.img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt=""/>
+                </div>
+                <div>
+                  <div className="serif" style={{ fontSize: 15 }}>{it.p[lang].name}</div>
+                  <div className="mute" style={{ fontSize: 12, marginTop: 4 }}>{it.p.collection}</div>
+                  <div className="row gap-2 mt-4" style={{ border: '1px solid var(--line)', display: 'inline-flex' }}>
+                    <button onClick={() => setQty(it.id, it.qty - 1)} style={{ width: 28, height: 28 }} aria-label="−"><Icon.Minus s={10}/></button>
+                    <span style={{ fontSize: 12, minWidth: 20, textAlign: 'center' }}>{it.qty}</span>
+                    <button onClick={() => setQty(it.id, it.qty + 1)} style={{ width: 28, height: 28 }} aria-label="+"><Icon.Plus s={10}/></button>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                  <button onClick={() => removeFromCart(it.id)} style={{ color: 'var(--ink-mute)' }} aria-label="Retirer"><Icon.X s={14}/></button>
+                  <div className="serif" style={{ fontSize: 15 }}>{fmt(it.p.price * it.qty)}</div>
                 </div>
               </div>
-              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <button onClick={() => removeFromCart(it.id)} style={{ color: 'var(--ink-mute)' }} aria-label="Retirer"><Icon.X s={14}/></button>
-                <div className="serif" style={{ fontSize: 15 }}>{fmt(it.p.price * it.qty)}</div>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          {items.length > 0 && (
+            <CrossSell productsInCart={cart.map(c => c.id)} allProducts={catalog}/>
+          )}
         </div>
         {items.length > 0 && (
           <div style={{ padding: 28, borderTop: '1px solid var(--line)' }}>
