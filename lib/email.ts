@@ -289,3 +289,64 @@ export async function sendCollaboratorInvite(email: string, password: string, in
     html: layout('Accès admin', inner, 'Nouveau collaborateur'),
   });
 }
+
+export async function sendGiftNotice(opts: {
+  recipient_name: string;
+  recipient_email: string;
+  buyer_name: string;
+  message: string | null;
+  order_id: string;
+  items: Array<{ name: string; qty: number; img?: string | null }>;
+}) {
+  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://pirabel-one.store';
+  const { recipient_name, recipient_email, buyer_name, message, order_id, items } = opts;
+
+  const itemsHtml = items.slice(0, 4).map(it => `
+    <tr>
+      ${it.img ? `<td width="60" valign="top" style="padding:10px;"><img src="${it.img}" width="56" height="70" style="object-fit:cover;background:#ede7dc;display:block;border-radius:1px;"/></td>` : ''}
+      <td valign="top" style="padding:10px;font-family:Georgia,serif;font-size:15px;">${escape(it.name)}<div style="font-family:sans-serif;color:#6b6459;font-size:12px;margin-top:4px;">× ${it.qty}</div></td>
+    </tr>`).join('');
+
+  const inner = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:48px;line-height:1;margin-bottom:12px;">🎁</div>
+      <div style="font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#6b6459;">Un cadeau pour toi</div>
+    </div>
+
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:400;margin:0 0 16px;text-align:center;line-height:1.2;">${escape(recipient_name.split(' ')[0] || recipient_name)}, <em style="color:#8a6b3a;">tu as reçu un cadeau.</em></h1>
+
+    <p style="font-size:15px;line-height:1.7;color:#2c2821;text-align:center;margin:0 0 28px;">
+      <strong>${escape(buyer_name)}</strong> a pensé à toi et t&apos;a envoyé une pièce choisie chez <strong>Pirabel</strong>, notre Maison basée à Cotonou.
+    </p>
+
+    ${message ? `
+    <div style="margin:28px 0;padding:24px 28px;background:#ede7dc;border-left:3px solid #8a6b3a;">
+      <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#6b6459;margin-bottom:10px;">Message de ${escape(buyer_name)}</div>
+      <p style="margin:0;font-family:Georgia,serif;font-size:16px;line-height:1.65;font-style:italic;color:#14110d;">« ${escape(message)} »</p>
+    </div>
+    ` : ''}
+
+    <div style="margin:28px 0;">
+      <div style="font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#6b6459;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #d9d2c4;">Contenu de ton cadeau</div>
+      <table width="100%">${itemsHtml}</table>
+    </div>
+
+    <div style="margin:28px 0;padding:18px;background:#fdfbf7;border:1px solid #d9d2c4;text-align:center;">
+      <div style="font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#6b6459;margin-bottom:6px;">Numéro de commande</div>
+      <code style="font-family:monospace;font-size:14px;">${escape(order_id)}</code>
+      <p style="font-size:11px;color:#9c9589;margin:8px 0 0;">Ta livraison arrive bientôt. Suis-la en temps réel.</p>
+    </div>
+
+    <div style="text-align:center;margin-top:28px;">
+      <a href="${site}/suivi?id=${encodeURIComponent(order_id)}" style="display:inline-block;background:#14110d;color:#f7f3ec;padding:16px 36px;text-decoration:none;font-size:11px;letter-spacing:.22em;text-transform:uppercase;">Suivre la livraison</a>
+    </div>
+
+    <p style="margin-top:32px;font-size:12px;color:#9c9589;text-align:center;line-height:1.6;">Une question ? Réponds à cet email.<br/>Pirabel · Maison de Cotonou</p>
+  `;
+  await safeSend({
+    from: FROM,
+    to: recipient_email,
+    subject: `🎁 ${buyer_name.split(' ')[0]} t'a envoyé un cadeau Pirabel`,
+    html: layout('Cadeau reçu', inner, 'Cadeau'),
+  });
+}

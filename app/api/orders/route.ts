@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-import { sendOrderConfirmation } from '@/lib/email';
+import { sendOrderConfirmation, sendGiftNotice } from '@/lib/email';
 
 type IncomingItem = { id: string; qty: number; size?: string; color?: string };
 
@@ -17,10 +17,15 @@ type IncomingOrder = {
     zone?: string;
     address?: string;
   };
+  // Gift flow — when true, shipping.* = recipient, buyer_* = person paying
+  is_gift?: boolean;
+  gift_message?: string;
+  gift_delivery_date?: string; // ISO date
+  buyer_name?: string;
+  buyer_email?: string;
 };
 
 function orderId(): string {
-  // PB-XXXXXX (6 digits from timestamp + random)
   const ts = Date.now().toString(36).toUpperCase().slice(-4);
   const r = Math.random().toString(36).toUpperCase().slice(2, 4);
   return `PB-${ts}${r}`;
@@ -40,15 +45,18 @@ export async function POST(request: Request) {
   if (!['mtn', 'moov', 'celtiis', 'card', 'cod'].includes(body.payment_method)) {
     return NextResponse.json({ error: 'Invalid payment method' }, { status: 400 });
   }
+  if (body.is_gift) {
+    if (!body.buyer_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.buyer_email)) {
+      return NextResponse.json({ error: 'Email de l\'acheteur requis pour un cadeau' }, { status: 400 });
+    }
+  }
 
-  // Optional: link to user if signed in
   const userClient = await createClient();
   const { data: { user } } = await userClient.auth.getUser();
   const user_id = user?.id ?? null;
 
   const sb = createAdminClient();
 
-  // Fetch real prices from DB — never trust client-sent prices.
   const ids = body.items.map(i => i.id);
   const { data: dbProducts, error: pErr } = await sb
     .from('products')
@@ -72,7 +80,6 @@ export async function POST(request: Request) {
   let discount = 0;
   let appliedPromo: string | null = null;
 
-  // Server-side promo validation
   if (body.promo_code) {
     const code = body.promo_code.trim().toUpperCase();
     const { data: promo } = await sb.from('promo_codes').select('*').eq('code', code).eq('active', true).maybeSingle();
@@ -91,7 +98,6 @@ export async function POST(request: Request) {
   const total = Math.max(0, subtotal + delivery - discount);
   const id = orderId();
 
-  // Insert order
   const { error: oErr } = await sb.from('orders').insert({
     id,
     user_id,
@@ -108,10 +114,14 @@ export async function POST(request: Request) {
     shipping_city: body.shipping.city,
     shipping_zone: body.shipping.zone ?? null,
     shipping_address: body.shipping.address ?? null,
+    is_gift: body.is_gift ?? false,
+    gift_message: body.is_gift ? (body.gift_message ?? null) : null,
+    gift_delivery_date: body.is_gift && body.gift_delivery_date ? body.gift_delivery_date : null,
+    buyer_email: body.is_gift ? (body.buyer_email ?? null) : null,
+    buyer_name: body.is_gift ? (body.buyer_name ?? null) : null,
   });
   if (oErr) return NextResponse.json({ error: oErr.message }, { status: 500 });
 
-  // Increment promo uses_count
   if (appliedPromo) {
     const { data: p } = await sb.from('promo_codes').select('uses_count').eq('code', appliedPromo).single();
     if (p) {
@@ -119,38 +129,46 @@ export async function POST(request: Request) {
     }
   }
 
-  // Insert items
   const { error: iErr } = await sb.from('order_items').insert(
     lines.map(l => ({
-      order_id: id,
-      product_id: l.id,
-      name: l.name,
-      img: l.img,
-      price: l.price,
-      qty: l.qty,
-      size: l.size ?? null,
-      color: l.color ?? null,
+      order_id: id, product_id: l.id,
+      name: l.name, img: l.img, price: l.price,
+      qty: l.qty, size: l.size ?? null, color: l.color ?? null,
     }))
   );
   if (iErr) {
-    // rollback the order if items failed
     await sb.from('orders').delete().eq('id', id);
     return NextResponse.json({ error: iErr.message }, { status: 500 });
   }
 
-  // Fire confirmation emails (non-blocking — errors are swallowed)
-  sendOrderConfirmation({
+  // Emails
+  // When gift: send purchase confirmation to buyer_email (with full invoice),
+  // and a separate "You received a gift" email to shipping_email (recipient).
+  // When normal: standard flow (buyer = shipping).
+  const orderPayload = {
     id,
     subtotal, delivery, total,
     payment_method: body.payment_method,
     shipping_name: body.shipping.name,
     shipping_phone: body.shipping.phone,
-    shipping_email: body.shipping.email,
+    shipping_email: body.is_gift ? body.buyer_email : body.shipping.email,
     shipping_city: body.shipping.city,
     shipping_zone: body.shipping.zone,
     shipping_address: body.shipping.address,
     items: lines.map(l => ({ name: l.name, qty: l.qty, price: l.price, size: l.size, color: l.color, img: l.img })),
-  }).catch(e => console.error('[order email]', e));
+  };
+  sendOrderConfirmation(orderPayload).catch(e => console.error('[order email]', e));
 
-  return NextResponse.json({ id, total, status: 'pending' });
+  if (body.is_gift && body.shipping.email) {
+    sendGiftNotice({
+      recipient_name: body.shipping.name,
+      recipient_email: body.shipping.email,
+      buyer_name: body.buyer_name ?? 'Un ami',
+      message: body.gift_message ?? null,
+      order_id: id,
+      items: lines.map(l => ({ name: l.name, qty: l.qty, img: l.img })),
+    }).catch(e => console.error('[gift notice]', e));
+  }
+
+  return NextResponse.json({ id, total, status: 'pending', is_gift: body.is_gift ?? false });
 }

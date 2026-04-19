@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useMemo, useState } from 'react';
 import { Icon } from '@/components/icons';
 import { useStore } from '@/components/store-provider';
 import { products } from '@/lib/products';
@@ -10,10 +10,19 @@ import { fmt } from '@/lib/format';
 
 type PaymentMethod = 'mtn' | 'moov' | 'celtiis' | 'card' | 'cod';
 
-export default function CheckoutPage() {
+function CheckoutInner() {
   const router = useRouter();
+  const search = useSearchParams();
   const { lang, cart, clearCart } = useStore();
   const [step, setStep] = useState(1);
+
+  // Gift mode: query param ?gift=1 pre-enables, or user toggles in step 1
+  const [isGift, setIsGift] = useState(search.get('gift') === '1');
+  const [giftMessage, setGiftMessage] = useState('');
+  const [giftDeliveryDate, setGiftDeliveryDate] = useState('');
+  const [buyerEmail, setBuyerEmail] = useState('');
+  const [buyerName, setBuyerName] = useState('');
+
   const [info, setInfo] = useState({ name: '', phone: '', email: '', city: 'Cotonou', zone: '', address: '' });
   const [pay, setPay] = useState<PaymentMethod>('mtn');
   const [placing, setPlacing] = useState(false);
@@ -90,17 +99,47 @@ export default function CheckoutPage() {
         <div>
           {step === 1 && (
             <div>
+              {/* Gift toggle */}
+              <div
+                onClick={() => setIsGift(g => !g)}
+                style={{
+                  padding: '16px 20px', marginBottom: 24, cursor: 'pointer',
+                  background: isGift ? 'var(--ink)' : 'var(--ivory-2)',
+                  color: isGift ? 'var(--ivory)' : 'var(--ink)',
+                  display: 'flex', gap: 14, alignItems: 'center',
+                  border: '1px solid ' + (isGift ? 'var(--ink)' : 'var(--line)'),
+                }}
+              >
+                <div style={{ fontSize: 24 }}>🎁</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 500, fontSize: 15 }}>
+                    {isGift ? (lang === 'fr' ? 'Ceci est un cadeau' : 'This is a gift') : (lang === 'fr' ? 'Offrir ce(s) article(s) ?' : 'Send as a gift?')}
+                  </div>
+                  <div style={{ fontSize: 12, opacity: 0.75, marginTop: 2 }}>
+                    {isGift
+                      ? (lang === 'fr' ? 'Livré directement au destinataire avec un message personnalisé' : 'Shipped directly to the recipient with a personal note')
+                      : (lang === 'fr' ? 'Livraison au destinataire + message personnalisé + prix masqués sur le colis' : 'Ship to recipient, with a personal note')}
+                  </div>
+                </div>
+                <div style={{ width: 44, height: 24, borderRadius: 24, background: isGift ? 'var(--gold)' : 'var(--line)', position: 'relative', transition: 'background .2s' }}>
+                  <div style={{ position: 'absolute', top: 2, left: isGift ? 22 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left .2s' }}/>
+                </div>
+              </div>
+
+              <h3 className="serif" style={{ fontSize: 20, fontWeight: 400, marginBottom: 16 }}>
+                {isGift ? (lang === 'fr' ? 'Destinataire du cadeau' : 'Gift recipient') : (lang === 'fr' ? 'Informations de livraison' : 'Shipping info')}
+              </h3>
               <div className="grid-form">
-                <div className="field"><label>{lang === 'fr' ? 'Nom complet' : 'Full name'}</label>
+                <div className="field"><label>{isGift ? (lang === 'fr' ? 'Nom du destinataire *' : 'Recipient name *') : (lang === 'fr' ? 'Nom complet *' : 'Full name *')}</label>
                   <input className="input" value={info.name} onChange={e => setInfo({ ...info, name: e.target.value })}/>
                 </div>
-                <div className="field"><label>{lang === 'fr' ? 'Téléphone' : 'Phone'}</label>
+                <div className="field"><label>{isGift ? (lang === 'fr' ? 'Téléphone du destinataire *' : 'Recipient phone *') : (lang === 'fr' ? 'Téléphone *' : 'Phone *')}</label>
                   <input className="input" value={info.phone} onChange={e => setInfo({ ...info, phone: e.target.value })} placeholder="+229 01 49 44 67 20"/>
                 </div>
-                <div className="field span-all"><label>Email</label>
+                <div className="field span-all"><label>{isGift ? (lang === 'fr' ? 'Email du destinataire (optionnel, pour la notification cadeau)' : 'Recipient email (optional, for gift notification)') : 'Email'}</label>
                   <input className="input" type="email" value={info.email} onChange={e => setInfo({ ...info, email: e.target.value })}/>
                 </div>
-                <div className="field"><label>{lang === 'fr' ? 'Ville' : 'City'}</label>
+                <div className="field"><label>{lang === 'fr' ? 'Ville *' : 'City *'}</label>
                   <select className="select" value={info.city} onChange={e => setInfo({ ...info, city: e.target.value })}>
                     <option>Cotonou</option><option>Porto-Novo</option><option>Parakou</option><option>Abomey-Calavi</option><option>Ouidah</option>
                   </select>
@@ -112,14 +151,53 @@ export default function CheckoutPage() {
                   <input className="input" value={info.address} onChange={e => setInfo({ ...info, address: e.target.value })}/>
                 </div>
               </div>
+
+              {/* Gift-only fields */}
+              {isGift && (
+                <>
+                  <h3 className="serif mt-8" style={{ fontSize: 20, fontWeight: 400, marginBottom: 16 }}>
+                    {lang === 'fr' ? 'Votre message' : 'Your message'}
+                  </h3>
+                  <div className="grid-form">
+                    <div className="field span-all">
+                      <label>{lang === 'fr' ? 'Mot pour accompagner le cadeau (optionnel)' : 'Note to include with the gift (optional)'}</label>
+                      <textarea
+                        className="textarea" rows={4} maxLength={500}
+                        value={giftMessage} onChange={e => setGiftMessage(e.target.value)}
+                        placeholder={lang === 'fr' ? 'Bon anniversaire ! J\'ai pensé à toi en voyant cette pièce…' : 'Happy birthday! I thought of you when I saw this…'}
+                        style={{ resize: 'vertical' }}
+                      />
+                      <p className="mute mt-2" style={{ fontSize: 11 }}>
+                        {giftMessage.length}/500 — {lang === 'fr' ? 'Imprimé sur une carte glissée dans l\'emballage + envoyé par email au destinataire' : 'Printed on a card with the package + emailed to recipient'}
+                      </p>
+                    </div>
+                    <div className="field">
+                      <label>{lang === 'fr' ? 'Date de livraison souhaitée' : 'Desired delivery date'}</label>
+                      <input className="input" type="date" value={giftDeliveryDate} onChange={e => setGiftDeliveryDate(e.target.value)} min={new Date().toISOString().slice(0, 10)}/>
+                    </div>
+                  </div>
+
+                  <h3 className="serif mt-8" style={{ fontSize: 20, fontWeight: 400, marginBottom: 16 }}>
+                    {lang === 'fr' ? 'Vos informations (acheteur)' : 'Your information (buyer)'}
+                  </h3>
+                  <div className="grid-form">
+                    <div className="field"><label>{lang === 'fr' ? 'Votre nom' : 'Your name'}</label>
+                      <input className="input" value={buyerName} onChange={e => setBuyerName(e.target.value)} placeholder={lang === 'fr' ? 'Apparaît sur le message « De la part de … »' : 'Shown as "From ..." on the gift note'}/>
+                    </div>
+                    <div className="field"><label>{lang === 'fr' ? 'Votre email (pour le reçu) *' : 'Your email (for the receipt) *'}</label>
+                      <input className="input" type="email" required value={buyerEmail} onChange={e => setBuyerEmail(e.target.value)}/>
+                    </div>
+                  </div>
+                </>
+              )}
               <div className="mt-8">
                 <button
                   className="btn btn-primary btn-lg"
                   onClick={() => {
-                    // Track abandoned-cart candidate: if the user leaves now, our cron will email them.
-                    if (info.email && cart.length > 0) {
+                    const billingEmail = isGift ? buyerEmail : info.email;
+                    if (billingEmail && cart.length > 0) {
                       const payload = {
-                        email: info.email,
+                        email: billingEmail,
                         cart_items: cart.map(c => {
                           const p = products.find(x => x.id === c.id);
                           return p ? { id: c.id, name: p[lang].name, qty: c.qty, img: p.img, price: p.price } : null;
@@ -131,7 +209,6 @@ export default function CheckoutPage() {
                         body: JSON.stringify(payload), keepalive: true,
                       }).catch(() => {});
                     }
-                    // GA4: begin_checkout
                     const w = window as unknown as { gtag?: (...args: unknown[]) => void };
                     if (w.gtag) {
                       w.gtag('event', 'begin_checkout', {
@@ -141,7 +218,7 @@ export default function CheckoutPage() {
                     }
                     setStep(2);
                   }}
-                  disabled={!info.name || !info.phone}
+                  disabled={!info.name || !info.phone || (isGift && !buyerEmail)}
                 >
                   {lang === 'fr' ? 'Continuer' : 'Continue'}
                 </button>
@@ -176,8 +253,16 @@ export default function CheckoutPage() {
 
           {step === 3 && (
             <div>
+              {isGift && (
+                <div className="mb-6" style={{ padding: 20, background: 'var(--ink)', color: 'var(--ivory)' }}>
+                  <div style={{ fontSize: 10, letterSpacing: '.24em', textTransform: 'uppercase', opacity: 0.6, marginBottom: 8 }}>🎁 Commande cadeau</div>
+                  <div>Livré à <strong>{info.name}</strong> · de la part de <strong>{buyerName || 'vous'}</strong></div>
+                  {giftMessage && <div style={{ marginTop: 10, fontStyle: 'italic', opacity: 0.85, fontSize: 13 }}>« {giftMessage} »</div>}
+                  {giftDeliveryDate && <div style={{ marginTop: 8, fontSize: 12, opacity: 0.75 }}>Date souhaitée : {new Date(giftDeliveryDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</div>}
+                </div>
+              )}
               <div className="mb-6" style={{ padding: 20, border: '1px solid var(--line)' }}>
-                <div className="caps mute mb-2">{lang === 'fr' ? 'Livraison' : 'Shipping'}</div>
+                <div className="caps mute mb-2">{isGift ? (lang === 'fr' ? 'Destinataire' : 'Recipient') : (lang === 'fr' ? 'Livraison' : 'Shipping')}</div>
                 <div>{info.name} · {info.phone}</div>
                 <div className="mute" style={{ fontSize: 13 }}>{info.zone}, {info.city}</div>
               </div>
@@ -202,6 +287,11 @@ export default function CheckoutPage() {
                           payment_method: pay,
                           promo_code: promoApplied?.code,
                           shipping: { name: info.name, phone: info.phone, email: info.email || undefined, city: info.city, zone: info.zone, address: info.address },
+                          is_gift: isGift,
+                          gift_message: isGift ? (giftMessage || undefined) : undefined,
+                          gift_delivery_date: isGift && giftDeliveryDate ? giftDeliveryDate : undefined,
+                          buyer_email: isGift ? buyerEmail : undefined,
+                          buyer_name: isGift ? (buyerName || undefined) : undefined,
                         }),
                       });
                       if (!res.ok) {
@@ -332,5 +422,13 @@ export default function CheckoutPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<main className="container" style={{ padding: 80 }}/>}>
+      <CheckoutInner/>
+    </Suspense>
   );
 }
