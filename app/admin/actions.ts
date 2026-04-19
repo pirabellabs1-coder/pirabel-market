@@ -356,6 +356,65 @@ export async function deleteReview(id: string) {
   revalidatePath('/admin/avis', 'page');
 }
 
+// ============ LOOKBOOKS ============
+
+export async function createLookbook(formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const title_fr = formData.get('title_fr')?.toString() || '';
+  const slug = (formData.get('slug')?.toString() || slugify(title_fr));
+  const published = formData.get('published') === 'on';
+  const product_ids = (formData.get('product_ids')?.toString() || '').split(',').map(s => s.trim()).filter(Boolean);
+  const row = {
+    slug,
+    title_fr,
+    title_en: formData.get('title_en')?.toString() || null,
+    description_fr: formData.get('description_fr')?.toString() || null,
+    description_en: formData.get('description_en')?.toString() || null,
+    cover_img: formData.get('cover_img')?.toString() || null,
+    product_ids,
+    published,
+  };
+  const { error } = await sb.from('lookbooks').insert(row);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/lookbooks', 'page');
+  revalidatePath('/lookbooks', 'page');
+  redirect('/admin/lookbooks');
+}
+
+export async function updateLookbook(id: string, formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const title_fr = formData.get('title_fr')?.toString() || '';
+  const published = formData.get('published') === 'on';
+  const product_ids = (formData.get('product_ids')?.toString() || '').split(',').map(s => s.trim()).filter(Boolean);
+  const row = {
+    slug: formData.get('slug')?.toString() || slugify(title_fr),
+    title_fr,
+    title_en: formData.get('title_en')?.toString() || null,
+    description_fr: formData.get('description_fr')?.toString() || null,
+    description_en: formData.get('description_en')?.toString() || null,
+    cover_img: formData.get('cover_img')?.toString() || null,
+    product_ids,
+    published,
+  };
+  const { error } = await sb.from('lookbooks').update(row).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/lookbooks', 'page');
+  revalidatePath('/lookbooks', 'page');
+  revalidatePath(`/lookbooks/${row.slug}`, 'page');
+  redirect('/admin/lookbooks');
+}
+
+export async function deleteLookbook(id: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const { error } = await sb.from('lookbooks').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/lookbooks', 'page');
+  revalidatePath('/lookbooks', 'page');
+}
+
 // ============ COLLABORATORS / ADMIN ROLE ============
 
 export async function setAdmin(userId: string, isAdmin: boolean) {

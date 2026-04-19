@@ -122,17 +122,26 @@ requests.post(
   list_orders: {
     method: 'GET',
     path: '/api/v1/orders',
-    query: '?status=paid&limit=100',
-    description: 'Liste des commandes. Filtres : `status`, `since` (ISO date), `limit`, `offset`.',
-    curl: (site: string, key: string) => `curl -H "Authorization: Bearer ${key}" \\\n  "${site}/api/v1/orders?status=paid&since=2026-01-01"`,
-    js: (site: string, key: string) => `const res = await fetch("${site}/api/v1/orders?status=paid", {
-  headers: { "Authorization": "Bearer ${key}" },
-});
+    query: '?status=paid&since=2026-04-01&before=2026-05-01',
+    description: 'Liste des commandes. Filtres : `status`, `since` (ISO, inclusif ≥), `before` (ISO, exclusif <), `payment_method`, `limit`, `offset`. `since` + `before` délimite une fenêtre précise pour la compta (ex : avril uniquement).',
+    curl: (site: string, key: string) => `# Avril 2026 uniquement, statut payées
+curl -H "Authorization: Bearer ${key}" \\
+  "${site}/api/v1/orders?status=paid&since=2026-04-01&before=2026-05-01"`,
+    js: (site: string, key: string) => `// Plage avril 2026
+const res = await fetch(
+  "${site}/api/v1/orders?since=2026-04-01&before=2026-05-01",
+  { headers: { "Authorization": "Bearer ${key}" } }
+);
 const { data, count } = await res.json();`,
-    python: (site: string, key: string) => `r = requests.get(
+    python: (site: string, key: string) => `# Plage avril 2026
+r = requests.get(
   "${site}/api/v1/orders",
   headers={"Authorization": f"Bearer ${key}"},
-  params={"status": "paid", "since": "2026-01-01"},
+  params={
+    "status": "paid",
+    "since": "2026-04-01",
+    "before": "2026-05-01",
+  },
 )`,
     response: `{
   "data": [

@@ -27,6 +27,7 @@ export function Footer() {
               <li><Link href="/propos">{lang === 'fr' ? 'Notre histoire' : 'Our story'}</Link></li>
               <li><Link href="/propos">{lang === 'fr' ? 'Savoir-faire' : 'Craft'}</Link></li>
               <li><Link href="/journal">{lang === 'fr' ? 'Le Journal' : 'Journal'}</Link></li>
+              <li><Link href="/lookbooks">Lookbooks</Link></li>
               <li><Link href="/cartes-cadeaux">{lang === 'fr' ? 'Chèques cadeaux' : 'Gift cards'}</Link></li>
               <li><Link href="/contact">{lang === 'fr' ? 'Carrières' : 'Careers'}</Link></li>
             </ul>

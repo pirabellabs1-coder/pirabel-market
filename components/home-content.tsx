@@ -6,6 +6,7 @@ import { useStore } from '@/components/store-provider';
 import { ProductCard } from '@/components/product-card';
 import { Icon } from '@/components/icons';
 import { RecentlyViewed } from '@/components/recently-viewed';
+import { NewsletterForm } from '@/components/newsletter-form';
 import { i18n } from '@/lib/i18n';
 import type { Product, Category } from '@/lib/types';
 import { img } from '@/lib/format';
@@ -166,12 +167,7 @@ export function HomeContent({ products, categories }: Props) {
           <div className="section-eyebrow" style={{ color: 'rgba(247,243,236,.5)' }}>{lang === 'fr' ? 'Correspondance' : 'Correspondence'}</div>
           <h2 className="serif" style={{ fontSize: 'clamp(32px, 4vw, 52px)', margin: '12px 0 16px', fontWeight: 400 }}>{t.newsletter_title}</h2>
           <p style={{ maxWidth: 520, margin: '0 auto 32px', color: 'rgba(247,243,236,.7)' }}>{t.newsletter_sub}</p>
-          <form style={{ display: 'flex', gap: 12, maxWidth: 480, margin: '0 auto', borderBottom: '1px solid rgba(247,243,236,.3)' }} onSubmit={e => e.preventDefault()}>
-            <input placeholder={t.email_ph} style={{ flex: 1, background: 'transparent', border: 0, padding: '14px 0', color: 'var(--ivory)', outline: 0, fontSize: 15 }}/>
-            <button type="submit" style={{ color: 'var(--ivory)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', padding: '14px 0', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              {t.subscribe} <Icon.Arrow/>
-            </button>
-          </form>
+          <NewsletterForm/>
         </div>
       </section>
     </main>
