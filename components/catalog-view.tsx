@@ -3,12 +3,17 @@
 import { useMemo, useState } from 'react';
 import { useStore } from './store-provider';
 import { ProductCard } from './product-card';
-import { products } from '@/lib/products';
-import { categories } from '@/lib/categories';
+import type { Product, Category } from '@/lib/types';
 
 type Sort = 'featured' | 'price-asc' | 'price-desc';
 
-export function CatalogView({ category: initialCategory }: { category?: string }) {
+type Props = {
+  category?: string;
+  products: Product[];
+  categories: Category[];
+};
+
+export function CatalogView({ category: initialCategory, products, categories }: Props) {
   const { lang } = useStore();
   const [cat, setCat] = useState<string>(initialCategory || 'all');
   const [sort, setSort] = useState<Sort>('featured');
@@ -18,7 +23,7 @@ export function CatalogView({ category: initialCategory }: { category?: string }
     if (sort === 'price-asc') list = [...list].sort((a, b) => a.price - b.price);
     if (sort === 'price-desc') list = [...list].sort((a, b) => b.price - a.price);
     return list;
-  }, [cat, sort]);
+  }, [cat, sort, products]);
 
   const catMeta = categories.find(c => c.id === cat);
 

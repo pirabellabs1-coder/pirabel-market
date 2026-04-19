@@ -5,12 +5,14 @@ import { useState } from 'react';
 import { Icon } from './icons';
 import { ProductCard } from './product-card';
 import { useStore } from './store-provider';
-import { getProduct, getRelated } from '@/lib/products';
+import type { Product } from '@/lib/types';
 import { fmt } from '@/lib/format';
 
-export function ProductView({ id }: { id: string }) {
+type Props = { product: Product | null; related: Product[] };
+
+export function ProductView({ product, related }: Props) {
   const { lang, addToCart, toggleWish, wish } = useStore();
-  const p = getProduct(id);
+  const p = product;
 
   const [size, setSize] = useState<string | undefined>(p?.size?.[0]);
   const [color, setColor] = useState<{ n: string; c: string } | undefined>(p?.color?.[0]);
@@ -26,7 +28,6 @@ export function ProductView({ id }: { id: string }) {
     );
   }
 
-  const related = getRelated(p.id, p.category, 4);
   const thumbs = [p.img, p.img2, p.img, p.img2].filter((x): x is string => !!x);
 
   return (

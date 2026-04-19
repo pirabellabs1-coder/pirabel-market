@@ -1,11 +1,10 @@
 import { CatalogView } from '@/components/catalog-view';
-import { categories } from '@/lib/categories';
+import { getProducts, getCategories } from '@/lib/db';
 
-export function generateStaticParams() {
-  return categories.map(c => ({ category: c.id }));
-}
+export const revalidate = 60;
 
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
   const { category } = await params;
-  return <CatalogView category={category}/>;
+  const [products, categories] = await Promise.all([getProducts(), getCategories()]);
+  return <CatalogView products={products} categories={categories} category={category}/>;
 }
