@@ -5,6 +5,7 @@ import { Fragment } from 'react';
 import { useStore } from '@/components/store-provider';
 import { ProductCard } from '@/components/product-card';
 import { Icon } from '@/components/icons';
+import { RecentlyViewed } from '@/components/recently-viewed';
 import { i18n } from '@/lib/i18n';
 import type { Product, Category } from '@/lib/types';
 import { img } from '@/lib/format';
@@ -156,6 +157,9 @@ export function HomeContent({ products, categories }: Props) {
           </div>
         </div>
       </section>
+
+      {/* Recently viewed — visible only to returning visitors */}
+      <RecentlyViewed allProducts={products}/>
 
       <section style={{ background: 'var(--ink)', color: 'var(--ivory)', padding: '100px 0' }}>
         <div className="container-tight" style={{ textAlign: 'center' }}>

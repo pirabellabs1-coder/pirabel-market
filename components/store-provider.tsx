@@ -91,6 +91,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return [...c, { id, qty: 1, size, color }];
     });
     showToast(lang === 'fr' ? '✓ Ajouté au sac' : '✓ Added to bag');
+    // GA4 add_to_cart
+    try {
+      const w = window as unknown as { gtag?: (...args: unknown[]) => void };
+      if (w.gtag) w.gtag('event', 'add_to_cart', { currency: 'XOF', items: [{ item_id: id, quantity: 1 }] });
+    } catch {}
   };
   const removeFromCart = (id: string) => setCart(c => c.filter(x => x.id !== id));
   const setQty = (id: string, qty: number) => {

@@ -115,7 +115,32 @@ export default function CheckoutPage() {
               <div className="mt-8">
                 <button
                   className="btn btn-primary btn-lg"
-                  onClick={() => setStep(2)}
+                  onClick={() => {
+                    // Track abandoned-cart candidate: if the user leaves now, our cron will email them.
+                    if (info.email && cart.length > 0) {
+                      const payload = {
+                        email: info.email,
+                        cart_items: cart.map(c => {
+                          const p = products.find(x => x.id === c.id);
+                          return p ? { id: c.id, name: p[lang].name, qty: c.qty, img: p.img, price: p.price } : null;
+                        }).filter(Boolean),
+                        subtotal,
+                      };
+                      fetch('/api/abandoned-cart', {
+                        method: 'POST', headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify(payload), keepalive: true,
+                      }).catch(() => {});
+                    }
+                    // GA4: begin_checkout
+                    const w = window as unknown as { gtag?: (...args: unknown[]) => void };
+                    if (w.gtag) {
+                      w.gtag('event', 'begin_checkout', {
+                        currency: 'XOF', value: subtotal,
+                        items: cart.map(c => ({ item_id: c.id, quantity: c.qty })),
+                      });
+                    }
+                    setStep(2);
+                  }}
                   disabled={!info.name || !info.phone}
                 >
                   {lang === 'fr' ? 'Continuer' : 'Continue'}
@@ -184,6 +209,22 @@ export default function CheckoutPage() {
                         throw new Error(e.error || 'Erreur serveur');
                       }
                       const data = await res.json();
+                      // Mark abandoned-cart recovered so cron doesn't re-email
+                      if (info.email) {
+                        fetch('/api/abandoned-cart/recover', {
+                          method: 'POST', headers: { 'content-type': 'application/json' },
+                          body: JSON.stringify({ email: info.email }), keepalive: true,
+                        }).catch(() => {});
+                      }
+                      // GA4 purchase
+                      const w = window as unknown as { gtag?: (...args: unknown[]) => void };
+                      if (w.gtag) {
+                        w.gtag('event', 'purchase', {
+                          transaction_id: data.id,
+                          currency: 'XOF', value: data.total,
+                          items: cart.map(c => ({ item_id: c.id, quantity: c.qty })),
+                        });
+                      }
                       clearCart();
                       setPlacedOrderId(data.id);
                       setStep(4);

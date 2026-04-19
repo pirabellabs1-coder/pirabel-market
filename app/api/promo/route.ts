@@ -12,6 +12,23 @@ export async function POST(request: Request) {
   if (!code) return NextResponse.json({ error: 'Code requis' }, { status: 400 });
 
   const sb = createAdminClient();
+
+  // Referral code? (format PB-XXXXXX, always starts with PB-)
+  if (code.startsWith('PB-') && code.length >= 6) {
+    const { data: ref } = await sb.from('referrals').select('code').eq('code', code).maybeSingle();
+    if (ref) {
+      const discount = Math.floor(subtotal * 0.10); // 10% for the referred friend
+      return NextResponse.json({
+        code: ref.code,
+        type: 'percent',
+        value: 10,
+        discount,
+        free_shipping: false,
+        description: 'Parrainage — 10% sur ta 1ère commande',
+      });
+    }
+  }
+
   const { data: promo } = await sb.from('promo_codes').select('*').eq('code', code).eq('active', true).maybeSingle();
 
   if (!promo) return NextResponse.json({ error: 'Code inconnu ou expiré' }, { status: 404 });

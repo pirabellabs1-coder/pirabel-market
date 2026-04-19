@@ -14,7 +14,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
   const sb = createAdminClient();
   const [{ data: profile }, { data: orders }, { data: wishlist }] = await Promise.all([
-    sb.from('profiles').select('first_name, last_name, phone, is_admin').eq('id', user.id).maybeSingle(),
+    sb.from('profiles').select('first_name, last_name, phone, is_admin, loyalty_points, total_spent, vip_tier').eq('id', user.id).maybeSingle(),
     sb.from('orders').select('id, status, total, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
     sb.from('wishlists').select('product_id').eq('user_id', user.id),
   ]);
@@ -29,7 +29,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       <AccountContent
         initialTab={(params.tab as any) ?? 'orders'}
         email={user.email ?? ''}
-        profile={profile ?? { first_name: null, last_name: null, phone: null, is_admin: false }}
+        profile={profile ?? { first_name: null, last_name: null, phone: null, is_admin: false, loyalty_points: 0, total_spent: 0, vip_tier: 'bronze' }}
         orders={orders ?? []}
         wishProducts={wishProducts ?? []}
       />
