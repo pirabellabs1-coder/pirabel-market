@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pirabel — Maison de Cotonou</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/v2.css">
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script>
+const TWEAK_DEFAULTS = {
+  "theme": "light",
+  "lang": "fr"
+};
+</script>
+
+<script src="assets/v2-data.js"></script>
+<script type="text/babel" src="components/v2-app.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+function App() {
+  const [theme, setTheme] = useState(() => localStorage.getItem('pb_theme') || TWEAK_DEFAULTS.theme);
+  const [lang, setLang] = useState(() => localStorage.getItem('pb_lang') || TWEAK_DEFAULTS.lang);
+  const [page, setPage] = useState(() => localStorage.getItem('pb_page') || 'home');
+  const [pageData, setPageData] = useState(() => JSON.parse(localStorage.getItem('pb_pagedata') || '{}'));
+  const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('pb_cart') || '[]'));
+  const [wish, setWish] = useState(() => JSON.parse(localStorage.getItem('pb_wish') || '[]'));
+  const [bagOpen, setBagOpen] = useState(false);
+  const [toast, setToast] = useState('');
+
+  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('pb_theme', theme); }, [theme]);
+  useEffect(() => { localStorage.setItem('pb_lang', lang); document.documentElement.lang = lang; }, [lang]);
+  useEffect(() => { localStorage.setItem('pb_page', page); localStorage.setItem('pb_pagedata', JSON.stringify(pageData)); window.scrollTo(0, 0); }, [page, pageData]);
+  useEffect(() => { localStorage.setItem('pb_cart', JSON.stringify(cart)); }, [cart]);
+  useEffect(() => { localStorage.setItem('pb_wish', JSON.stringify(wish)); }, [wish]);
+
+  const nav = (p, d = {}) => { setPage(p); setPageData(d); };
+
+  const showToast = (m) => { setToast(m); setTimeout(() => setToast(''), 2200); };
+
+  const addToCart = (id) => {
+    setCart(c => {
+      const e = c.find(x => x.id === id);
+      if (e) return c.map(x => x.id === id ? {...x, qty: x.qty + 1} : x);
+      return [...c, { id, qty: 1 }];
+    });
+    showToast(lang === 'fr' ? '✓ Ajouté au sac' : '✓ Added to bag');
+  };
+  const removeFromCart = (id) => setCart(c => c.filter(x => x.id !== id));
+  const setQty = (id, qty) => setCart(c => qty <= 0 ? c.filter(x => x.id !== id) : c.map(x => x.id === id ? {...x, qty} : x));
+  const toggleWish = (id) => setWish(w => w.includes(id) ? w.filter(x => x !== id) : [...w, id]);
+  const openProduct = (id) => nav('product', { id });
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+
+  const commonProps = { lang, onNav: nav, onAdd: addToCart, onWish: toggleWish, wish, onOpen: openProduct };
+
+  return (
+    <>
+      <Header lang={lang} onNav={nav} page={page} cartCount={cartCount} wishCount={wish.length}
+        onBag={() => setBagOpen(true)} onLang={() => setLang(l => l === 'fr' ? 'en' : 'fr')}/>
+
+      {page === 'home' && <Home {...commonProps}/>}
+      {page === 'catalog' && <Catalog {...commonProps} initCat={pageData.category}/>}
+      {page === 'product' && <Product id={pageData.id} {...commonProps}/>}
+      {page === 'checkout' && <Checkout lang={lang} cart={cart} onNav={nav} onPlace={() => setCart([])}/>}
+      {page === 'account' && <Account {...commonProps}/>}
+      {page === 'track' && <Track lang={lang}/>}
+      {page === 'about' && <About lang={lang}/>}
+      {page === 'contact' && <Contact lang={lang}/>}
+      {page === 'journal' && <Journal lang={lang}/>}
+
+      <Footer lang={lang} onNav={nav}/>
+
+      <CartDrawer open={bagOpen} onClose={() => setBagOpen(false)} cart={cart}
+        onRemove={removeFromCart} onQty={setQty} lang={lang}
+        onCheckout={() => { setBagOpen(false); nav('checkout'); }}/>
+
+      <a href="https://wa.me/2290197123456" target="_blank" rel="noopener" style={{
+        position:'fixed', bottom: 24, left: 24, width: 56, height: 56, borderRadius: 999,
+        background: 'var(--ink)', color: 'var(--ivory)', display: 'grid', placeItems: 'center', zIndex: 90,
+        boxShadow: '0 8px 24px rgba(0,0,0,.15)'
+      }}>
+        <Icon.Whats/>
+      </a>
+
+      <div className={`toast ${toast ? 'show' : ''}`}>{toast}</div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
