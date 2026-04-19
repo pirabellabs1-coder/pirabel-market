@@ -83,6 +83,14 @@ function LoginContent() {
               ? (lang === 'fr' ? "Pas encore de compte ? S'inscrire" : 'No account yet? Sign up')
               : (lang === 'fr' ? 'Déjà inscrit ? Se connecter' : 'Already registered? Sign in')}
           </button>
+
+          {mode === 'login' && (
+            <div style={{ textAlign: 'center' }}>
+              <Link href="/mot-de-passe-oublie" className="mute" style={{ fontSize: 12, letterSpacing: '.08em' }}>
+                {lang === 'fr' ? 'Mot de passe oublié ?' : 'Forgot password?'}
+              </Link>
+            </div>
+          )}
         </form>
 
         <div className="mute mt-8" style={{ textAlign: 'center', fontSize: 12 }}>
