@@ -207,12 +207,17 @@ create policy "admin read all order items" on order_items for select using (
 -- ==========================================
 -- Trigger : créer un profil à l'inscription
 -- ==========================================
-create or replace function handle_new_user() returns trigger as $$
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
 begin
-  insert into profiles (id) values (new.id);
+  insert into public.profiles (id) values (new.id);
   return new;
 end;
-$$ language plpgsql security definer;
+$$;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created

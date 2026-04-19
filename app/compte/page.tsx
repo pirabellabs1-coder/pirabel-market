@@ -1,106 +1,38 @@
-'use client';
+import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { AccountContent } from './_content';
 
-import Link from 'next/link';
-import { Suspense, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Icon } from '@/components/icons';
-import { ProductCard } from '@/components/product-card';
-import { SimplePage } from '@/components/simple-page';
-import { useStore } from '@/components/store-provider';
-import { products } from '@/lib/products';
-import { fmt } from '@/lib/format';
+export const dynamic = 'force-dynamic';
 
-type Tab = 'orders' | 'wish' | 'addr' | 'set';
+export default async function AccountPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const params = await searchParams;
+  const userClient = await createClient();
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) redirect('/connexion?next=/compte');
 
-function AccountContent() {
-  const search = useSearchParams();
-  const initialTab = (search.get('tab') as Tab) || 'orders';
-  const [tab, setTab] = useState<Tab>(initialTab);
-  const { lang, wish } = useStore();
-  const wishItems = products.filter(p => wish.includes(p.id));
+  const sb = createAdminClient();
+  const [{ data: profile }, { data: orders }, { data: wishlist }] = await Promise.all([
+    sb.from('profiles').select('first_name, last_name, phone, is_admin').eq('id', user.id).maybeSingle(),
+    sb.from('orders').select('id, status, total, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
+    sb.from('wishlists').select('product_id').eq('user_id', user.id),
+  ]);
 
-  return (
-    <SimplePage title={lang === 'fr' ? 'Mon compte' : 'My account'} eyebrow="Aïcha Koudougou">
-      <div className="row gap-6 mb-8 wrap" style={{ borderBottom: '1px solid var(--line)' }}>
-        {([
-          { id: 'orders', l: lang === 'fr' ? 'Commandes' : 'Orders' },
-          { id: 'wish', l: lang === 'fr' ? 'Souhaits' : 'Wishlist' },
-          { id: 'addr', l: lang === 'fr' ? 'Adresses' : 'Addresses' },
-          { id: 'set', l: lang === 'fr' ? 'Paramètres' : 'Settings' },
-        ] as const).map(t => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            style={{
-              padding: '12px 0', fontSize: 12, letterSpacing: '.14em', textTransform: 'uppercase',
-              color: tab === t.id ? 'var(--ink)' : 'var(--ink-mute)',
-              borderBottom: tab === t.id ? '1px solid var(--ink)' : 'none',
-              marginBottom: -1,
-            }}
-          >{t.l}</button>
-        ))}
-      </div>
+  const wishIds = (wishlist ?? []).map(w => w.product_id);
+  const { data: wishProducts } = wishIds.length > 0
+    ? await sb.from('products').select('id, category, collection, name_fr, name_en, price, old_price, img, img2, tag, sizes, colors').in('id', wishIds).eq('published', true)
+    : { data: [] as any[] };
 
-      {tab === 'orders' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {[
-            { id: 'PB-284719', d: '18 avril 2026', s: lang === 'fr' ? 'En route' : 'In transit', t: 147500, n: 3 },
-            { id: 'PB-281203', d: '02 avril 2026', s: lang === 'fr' ? 'Livrée' : 'Delivered', t: 285000, n: 2 },
-          ].map(o => (
-            <div key={o.id} className="row between wrap gap-4" style={{ padding: 24, border: '1px solid var(--line)' }}>
-              <div>
-                <div className="mono mute" style={{ fontSize: 12 }}>{o.id}</div>
-                <div className="serif mt-2" style={{ fontSize: 17 }}>{o.d} · {o.n} {lang === 'fr' ? 'articles' : 'items'}</div>
-              </div>
-              <span className="caps">{o.s}</span>
-              <div className="serif" style={{ fontSize: 20 }}>{fmt(o.t)}</div>
-              <Link className="btn btn-outline btn-sm" href="/suivi">{lang === 'fr' ? 'Suivre' : 'Track'}</Link>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === 'wish' && (
-        wishItems.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60 }}>
-            <Icon.Heart s={28}/>
-            <p className="mute mt-4">{lang === 'fr' ? "Vous n'avez pas encore de souhaits." : 'No wishlist items yet.'}</p>
-          </div>
-        ) : (
-          <div className="grid-4">
-            {wishItems.map(p => <ProductCard key={p.id} p={p}/>)}
-          </div>
-        )
-      )}
-
-      {tab === 'addr' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ padding: 24, border: '1px solid var(--line)' }}>
-            <div className="caps mute mb-2">{lang === 'fr' ? 'Principale' : 'Primary'}</div>
-            <div>Cadjehoun, en face de la pharmacie · Cotonou</div>
-          </div>
-          <button className="btn btn-outline" style={{ alignSelf: 'flex-start' }}>+ {lang === 'fr' ? 'Ajouter' : 'Add'}</button>
-        </div>
-      )}
-
-      {tab === 'set' && (
-        <div className="grid-form" style={{ maxWidth: 560 }}>
-          <div className="field"><label>{lang === 'fr' ? 'Prénom' : 'First name'}</label><input className="input" defaultValue="Aïcha"/></div>
-          <div className="field"><label>{lang === 'fr' ? 'Nom' : 'Last name'}</label><input className="input" defaultValue="Koudougou"/></div>
-          <div className="field span-all"><label>Email</label><input className="input" defaultValue="aicha@exemple.com"/></div>
-          <div className="span-all">
-            <button className="btn btn-primary">{lang === 'fr' ? 'Enregistrer' : 'Save'}</button>
-          </div>
-        </div>
-      )}
-    </SimplePage>
-  );
-}
-
-export default function AccountPage() {
   return (
     <Suspense fallback={<main className="container" style={{ padding: 80 }}/>}>
-      <AccountContent/>
+      <AccountContent
+        initialTab={(params.tab as any) ?? 'orders'}
+        email={user.email ?? ''}
+        profile={profile ?? { first_name: null, last_name: null, phone: null, is_admin: false }}
+        orders={orders ?? []}
+        wishProducts={wishProducts ?? []}
+      />
     </Suspense>
   );
 }

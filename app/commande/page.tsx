@@ -16,6 +16,9 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(1);
   const [info, setInfo] = useState({ name: '', phone: '', email: '', city: 'Cotonou', zone: '', address: '' });
   const [pay, setPay] = useState<PaymentMethod>('mtn');
+  const [placing, setPlacing] = useState(false);
+  const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const items = useMemo(() => cart
     .map(c => ({ ...c, p: products.find(x => x.id === c.id) }))
@@ -135,13 +138,42 @@ export default function CheckoutPage() {
                 <div className="caps mute mb-2">{lang === 'fr' ? 'Paiement' : 'Payment'}</div>
                 <div>{payLabel(pay)}</div>
               </div>
+              {error && <p style={{ color: '#a63d2a', fontSize: 13, marginTop: 16 }}>{error}</p>}
               <div className="mt-8 row gap-3">
-                <button className="btn btn-ghost" onClick={() => setStep(2)}>← {lang === 'fr' ? 'Retour' : 'Back'}</button>
+                <button className="btn btn-ghost" onClick={() => setStep(2)} disabled={placing}>← {lang === 'fr' ? 'Retour' : 'Back'}</button>
                 <button
                   className="btn btn-primary btn-lg"
-                  onClick={() => { clearCart(); setStep(4); }}
+                  disabled={placing}
+                  onClick={async () => {
+                    setPlacing(true); setError(null);
+                    try {
+                      const res = await fetch('/api/orders', {
+                        method: 'POST',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({
+                          items: cart.map(c => ({ id: c.id, qty: c.qty, size: c.size, color: c.color })),
+                          payment_method: pay,
+                          shipping: { name: info.name, phone: info.phone, email: info.email || undefined, city: info.city, zone: info.zone, address: info.address },
+                        }),
+                      });
+                      if (!res.ok) {
+                        const e = await res.json().catch(() => ({ error: 'Erreur serveur' }));
+                        throw new Error(e.error || 'Erreur serveur');
+                      }
+                      const data = await res.json();
+                      clearCart();
+                      setPlacedOrderId(data.id);
+                      setStep(4);
+                    } catch (e) {
+                      setError((e as Error).message);
+                    } finally {
+                      setPlacing(false);
+                    }
+                  }}
                 >
-                  {lang === 'fr' ? 'Payer' : 'Pay'} {fmt(subtotal + delivery)}
+                  {placing
+                    ? (lang === 'fr' ? 'Enregistrement…' : 'Placing…')
+                    : `${lang === 'fr' ? 'Payer' : 'Pay'} ${fmt(subtotal + delivery)}`}
                 </button>
               </div>
             </div>
@@ -157,9 +189,11 @@ export default function CheckoutPage() {
                   ? 'Votre commande est confirmée. Un message de confirmation vous a été envoyé.'
                   : 'Your order is confirmed. A confirmation message has been sent.'}
               </p>
-              <div className="mono mute mt-4">№ PB-{Date.now().toString().slice(-6)}</div>
+              {placedOrderId && <div className="mono mute mt-4">№ {placedOrderId}</div>}
               <div className="mt-8 row gap-3" style={{ justifyContent: 'center' }}>
-                <Link className="btn btn-primary" href="/suivi">{lang === 'fr' ? 'Suivre la commande' : 'Track order'}</Link>
+                <Link className="btn btn-primary" href={placedOrderId ? `/suivi?id=${placedOrderId}` : '/suivi'}>
+                  {lang === 'fr' ? 'Suivre la commande' : 'Track order'}
+                </Link>
                 <Link className="btn btn-outline" href="/">{lang === 'fr' ? "Retour à l'accueil" : 'Back to home'}</Link>
               </div>
             </div>
