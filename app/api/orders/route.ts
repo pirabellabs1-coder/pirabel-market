@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { sendOrderConfirmation } from '@/lib/email';
 
 type IncomingItem = { id: string; qty: number; size?: string; color?: string };
 
@@ -107,6 +108,20 @@ export async function POST(request: Request) {
     await sb.from('orders').delete().eq('id', id);
     return NextResponse.json({ error: iErr.message }, { status: 500 });
   }
+
+  // Fire confirmation emails (non-blocking — errors are swallowed)
+  sendOrderConfirmation({
+    id,
+    subtotal, delivery, total,
+    payment_method: body.payment_method,
+    shipping_name: body.shipping.name,
+    shipping_phone: body.shipping.phone,
+    shipping_email: body.shipping.email,
+    shipping_city: body.shipping.city,
+    shipping_zone: body.shipping.zone,
+    shipping_address: body.shipping.address,
+    items: lines.map(l => ({ name: l.name, qty: l.qty, price: l.price, size: l.size, color: l.color, img: l.img })),
+  }).catch(e => console.error('[order email]', e));
 
   return NextResponse.json({ id, total, status: 'pending' });
 }

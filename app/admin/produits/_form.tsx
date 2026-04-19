@@ -3,6 +3,7 @@
 import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createProduct, updateProduct } from '../actions';
+import { ImageInput } from './_image-input';
 
 type Category = { id: string; fr: string };
 
@@ -29,8 +30,6 @@ export function ProductForm({ product, categories }: { product?: ProductInput; c
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [imgPreview, setImgPreview] = useState(product?.img ?? '');
-  const [imgPreview2, setImgPreview2] = useState(product?.img2 ?? '');
   const editing = !!product?.id;
 
   const sizesStr = product?.sizes?.join(', ') ?? '';
@@ -92,16 +91,8 @@ export function ProductForm({ product, categories }: { product?: ProductInput; c
           <input className="input" name="old_price" type="number" min={0} step={500} defaultValue={product?.old_price ?? ''}/>
         </div>
 
-        <div className="field span-all">
-          <label>Image principale (URL) *</label>
-          <input className="input" name="img" type="url" required defaultValue={product?.img ?? ''} onChange={e => setImgPreview(e.target.value)}/>
-          {imgPreview && <div style={{ marginTop: 8, width: 120, aspectRatio: '4/5', overflow: 'hidden', background: 'var(--ivory-2)' }}><img src={imgPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/></div>}
-        </div>
-        <div className="field span-all">
-          <label>Image secondaire (URL, hover)</label>
-          <input className="input" name="img2" type="url" defaultValue={product?.img2 ?? ''} onChange={e => setImgPreview2(e.target.value)}/>
-          {imgPreview2 && <div style={{ marginTop: 8, width: 120, aspectRatio: '4/5', overflow: 'hidden', background: 'var(--ivory-2)' }}><img src={imgPreview2} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/></div>}
-        </div>
+        <ImageInput name="img" label="Image principale" required defaultValue={product?.img ?? ''}/>
+        <ImageInput name="img2" label="Image secondaire (hover)" defaultValue={product?.img2 ?? ''}/>
 
         <div className="field">
           <label>Tag (ex: Nouveau)</label>

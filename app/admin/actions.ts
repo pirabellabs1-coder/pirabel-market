@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { sendOrderStatusUpdate } from '@/lib/email';
 
 async function requireAdmin() {
   const sb = await createClient();
@@ -143,12 +144,29 @@ export async function deleteCategory(id: string) {
 export async function updateOrderStatus(id: string, status: string) {
   await requireAdmin();
   const sb = createAdminClient();
+
+  // Fetch current state (for email context + previous status)
+  const { data: prev } = await sb.from('orders').select('*').eq('id', id).maybeSingle();
+  if (!prev) throw new Error('Order not found');
+  const previousStatus = prev.status;
+
   const patch: Record<string, unknown> = { status };
   if (status === 'paid') patch.paid_at = new Date().toISOString();
   if (status === 'shipped') patch.shipped_at = new Date().toISOString();
   if (status === 'delivered') patch.delivered_at = new Date().toISOString();
   const { error } = await sb.from('orders').update(patch).eq('id', id);
   if (error) throw new Error(error.message);
+
+  // Fire status-change email (client only), non-blocking
+  if (previousStatus !== status) {
+    const { data: items } = await sb.from('order_items').select('name, qty, price, size, color, img').eq('order_id', id);
+    sendOrderStatusUpdate({
+      ...prev,
+      status,
+      items: items ?? [],
+    }, previousStatus).catch(e => console.error('[status email]', e));
+  }
+
   revalidatePath('/admin/commandes', 'page');
   revalidatePath(`/admin/commandes/${id}`, 'page');
 }
