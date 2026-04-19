@@ -50,11 +50,17 @@ export function Footer() {
           </div>
         </div>
         <div className="footer-bot">
-          <div>© 2026 Pirabel Maison · Cotonou, Bénin</div>
+          <div>
+            © 2026 Pirabel Maison · Cotonou, Bénin
+            <span style={{ marginLeft: 16, opacity: 0.7 }}>
+              · {lang === 'fr' ? 'Créé par' : 'Built by'}{' '}
+              <a href="https://pirabellabs.com" target="_blank" rel="noopener" style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3 }}>Pirabel Labs</a>
+            </span>
+          </div>
           <div style={{ display: 'flex', gap: 24 }}>
-            <a href="#">{lang === 'fr' ? 'Conditions' : 'Terms'}</a>
-            <a href="#">{lang === 'fr' ? 'Confidentialité' : 'Privacy'}</a>
-            <a href="#">Cookies</a>
+            <Link href="/conditions">{lang === 'fr' ? 'Conditions' : 'Terms'}</Link>
+            <Link href="/confidentialite">{lang === 'fr' ? 'Confidentialité' : 'Privacy'}</Link>
+            <Link href="/cookies">Cookies</Link>
           </div>
         </div>
       </div>

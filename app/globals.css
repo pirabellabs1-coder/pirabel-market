@@ -813,3 +813,24 @@ img { max-width: 100%; display: block; }
 .stars { display: inline-flex; gap: 2px; }
 .star-btn { padding: 2px; background: none; border: 0; cursor: pointer; color: var(--ink-faint); }
 .star-btn.active, .star-btn:hover { color: var(--gold); }
+
+/* ===== Legal pages ===== */
+.legal-body h2 {
+  font-family: var(--font-serif); font-weight: 400; font-size: 26px;
+  letter-spacing: -.005em; color: var(--ink);
+  margin: 2em 0 .6em; line-height: 1.2;
+}
+.legal-body h3 {
+  font-size: 15px; font-weight: 500; color: var(--ink);
+  margin: 1.6em 0 .4em; letter-spacing: .04em;
+}
+.legal-body p { margin: 0 0 1.1em; }
+.legal-body ul { margin: 0 0 1.1em 1.2em; }
+.legal-body li { margin-bottom: .4em; }
+.legal-body a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.legal-body a:hover { color: var(--accent); }
+.legal-body strong { color: var(--ink); font-weight: 500; }
+.legal-body code { font-family: var(--font-mono); background: var(--ivory-2); padding: 2px 8px; font-size: .9em; }
+.legal-body table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 13px; }
+.legal-body th, .legal-body td { padding: 10px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.legal-body th { background: var(--ivory-2); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: .1em; }
