@@ -128,8 +128,12 @@ export async function sendOrderConfirmation(order: Order) {
 
     <div style="margin-top:36px;text-align:center;">
       <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://pirabel-one.store'}/suivi?id=${encodeURIComponent(order.id)}"
-         style="display:inline-block;background:#14110d;color:#f7f3ec;padding:16px 36px;text-decoration:none;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;font-weight:500;">
+         style="display:inline-block;background:#14110d;color:#f7f3ec;padding:16px 36px;text-decoration:none;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;font-weight:500;margin:0 6px 12px;">
         Suivre ma commande
+      </a>
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://pirabel-one.store'}/facture/${encodeURIComponent(order.id)}"
+         style="display:inline-block;background:transparent;color:#14110d;border:1px solid #14110d;padding:15px 28px;text-decoration:none;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;font-weight:500;margin:0 6px 12px;">
+        📄 Voir la facture
       </a>
     </div>
 

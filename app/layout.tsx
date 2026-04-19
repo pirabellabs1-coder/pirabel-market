@@ -11,6 +11,7 @@ import { PopupHost } from '@/components/popup-host';
 import { GoogleAnalytics } from '@/components/google-analytics';
 import { getProducts } from '@/lib/db';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { organizationJsonLd } from '@/lib/seo';
 import './globals.css';
 
 const playfair = Playfair_Display({
@@ -100,6 +101,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <WhatsAppFloat/>
           <Toast/>
         </StoreProvider>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }}
+        />
         {gaId && <GoogleAnalytics gaId={gaId}/>}
       </body>
     </html>

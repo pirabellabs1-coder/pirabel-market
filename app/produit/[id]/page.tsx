@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ProductView } from '@/components/product-view';
 import { getProductById, getRelatedProducts } from '@/lib/db';
 import { fmt } from '@/lib/format';
+import { productJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 
 export const revalidate = 60;
 
@@ -12,6 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: p.fr.name,
     description: p.fr.desc ?? `${p.collection} · ${fmt(p.price)}`,
+    alternates: { canonical: `/produit/${p.id}` },
     openGraph: {
       type: 'website',
       title: p.fr.name,
@@ -26,25 +28,17 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const product = await getProductById(id);
   const related = product ? await getRelatedProducts(id, product.category, 4) : [];
 
-  // JSON-LD for rich snippets
-  const jsonLd = product ? {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.fr.name,
-    description: product.fr.desc,
-    image: [product.img, product.img2].filter(Boolean),
-    category: product.collection,
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'XOF',
-      price: product.price,
-      availability: 'https://schema.org/InStock',
-    },
-  } : null;
+  const productLd = product ? productJsonLd(product) : null;
+  const breadcrumbs = product ? breadcrumbJsonLd([
+    { name: 'Accueil', url: '/' },
+    { name: product.collection || 'Catalogue', url: `/catalogue/${product.category}` },
+    { name: product.fr.name, url: `/produit/${product.id}` },
+  ]) : null;
 
   return (
     <>
-      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}/>}
+      {productLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}/>}
+      {breadcrumbs && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}/>}
       <ProductView product={product} related={related}/>
     </>
   );

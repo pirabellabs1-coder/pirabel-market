@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { renderMarkdown } from '@/lib/markdown';
+import { articleJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 
 export const revalidate = 60;
 
@@ -17,12 +18,24 @@ type PageProps = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const sb = createAdminClient();
-  const { data: post } = await sb.from('journal_posts').select('title_fr, excerpt_fr, cover_img').eq('slug', slug).eq('published', true).maybeSingle();
+  const { data: post } = await sb
+    .from('journal_posts')
+    .select('title_fr, excerpt_fr, cover_img')
+    .eq('slug', slug)
+    .eq('published', true)
+    .maybeSingle();
   if (!post) return { title: 'Article' };
   return {
-    title: `${post.title_fr} · Le Journal Pirabel`,
+    title: post.title_fr,
     description: post.excerpt_fr ?? undefined,
-    openGraph: post.cover_img ? { images: [{ url: post.cover_img }] } : undefined,
+    alternates: { canonical: `/journal/${slug}` },
+    openGraph: {
+      type: 'article',
+      title: post.title_fr,
+      description: post.excerpt_fr ?? undefined,
+      images: post.cover_img ? [{ url: post.cover_img }] : undefined,
+    },
+    twitter: post.cover_img ? { card: 'summary_large_image', images: [post.cover_img] } : undefined,
   };
 }
 
@@ -39,9 +52,18 @@ export default async function JournalPostPage({ params }: PageProps) {
   if (!post) notFound();
 
   const bodyHtml = renderBody(post.body_fr || '');
+  const articleLd = articleJsonLd(post);
+  const crumbs = breadcrumbJsonLd([
+    { name: 'Accueil', url: '/' },
+    { name: 'Le Journal', url: '/journal' },
+    { name: post.title_fr, url: `/journal/${post.slug}` },
+  ]);
 
   return (
     <main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}/>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }}/>
+
       {post.cover_img && (
         <div style={{ width: '100%', height: 'min(60vh, 520px)', overflow: 'hidden', background: 'var(--ivory-2)' }}>
           <img src={post.cover_img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
