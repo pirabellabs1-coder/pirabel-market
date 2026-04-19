@@ -16,10 +16,20 @@ const sb = createClient(
 );
 
 console.log(`Supabase: ${process.env.NEXT_PUBLIC_SUPABASE_URL}\n`);
+// Tables without an `id` column use a different PK — specify per table.
+const tables = [
+  ['categories',  'id'],
+  ['products',    'id'],
+  ['profiles',    'id'],
+  ['orders',      'id'],
+  ['addresses',   'id'],
+  ['order_items', 'id'],
+  ['wishlists',   'user_id'],
+  ['newsletter',  'email'],
+];
 let allOk = true;
-for (const tbl of ['categories', 'products', 'profiles', 'orders', 'addresses', 'order_items', 'wishlists', 'newsletter']) {
-  // Use non-head SELECT — head:true returns 204 on missing tables which masks the error.
-  const { count, error } = await sb.from(tbl).select('id', { count: 'exact' }).limit(0);
+for (const [tbl, pk] of tables) {
+  const { count, error } = await sb.from(tbl).select(pk, { count: 'exact' }).limit(0);
   if (error) {
     allOk = false;
     console.log(`  ✗ ${tbl.padEnd(14)} MISSING — ${error.message}`);
