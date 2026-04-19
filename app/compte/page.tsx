@@ -84,11 +84,11 @@ function AccountContent() {
       )}
 
       {tab === 'set' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 560 }}>
+        <div className="grid-form" style={{ maxWidth: 560 }}>
           <div className="field"><label>{lang === 'fr' ? 'Prénom' : 'First name'}</label><input className="input" defaultValue="Aïcha"/></div>
           <div className="field"><label>{lang === 'fr' ? 'Nom' : 'Last name'}</label><input className="input" defaultValue="Koudougou"/></div>
-          <div className="field" style={{ gridColumn: '1/-1' }}><label>Email</label><input className="input" defaultValue="aicha@exemple.com"/></div>
-          <div style={{ gridColumn: '1/-1' }}>
+          <div className="field span-all"><label>Email</label><input className="input" defaultValue="aicha@exemple.com"/></div>
+          <div className="span-all">
             <button className="btn btn-primary">{lang === 'fr' ? 'Enregistrer' : 'Save'}</button>
           </div>
         </div>

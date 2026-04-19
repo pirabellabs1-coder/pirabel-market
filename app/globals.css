@@ -38,16 +38,25 @@ html, body {
   -webkit-font-smoothing: antialiased;
   font-weight: 400;
   letter-spacing: .005em;
+  overflow-x: hidden;
 }
+
+/* Prevent grid/flex children from overflowing their parent */
+.pcard, .pcard-img, .pcard-img > *,
+.split, .split > *,
+.grid-2 > *, .grid-3 > *, .grid-4 > *,
+.pdp-grid > *, .checkout-grid > *, .grid-form > *,
+.footer-grid > *, .header-row > * { min-width: 0; }
 
 a { color: inherit; text-decoration: none; }
 button { font: inherit; background: none; border: 0; cursor: pointer; color: inherit; }
 input, select, textarea { font: inherit; color: inherit; }
 img { max-width: 100%; display: block; }
 
-.container { max-width: 1440px; margin: 0 auto; padding: 0 40px; }
-.container-tight { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
-@media (max-width: 720px) { .container, .container-tight { padding: 0 20px; } }
+.container { max-width: 1440px; margin: 0 auto; padding: 0 40px; width: 100%; }
+.container-tight { max-width: 1200px; margin: 0 auto; padding: 0 40px; width: 100%; }
+@media (max-width: 960px) { .container, .container-tight { padding: 0 24px; } }
+@media (max-width: 480px) { .container, .container-tight { padding: 0 16px; } }
 
 .serif { font-family: var(--font-serif); font-weight: 400; letter-spacing: -.01em; }
 .mono { font-family: var(--font-mono); }
@@ -75,7 +84,8 @@ img { max-width: 100%; display: block; }
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 22px 0;
+  padding-top: 22px;
+  padding-bottom: 22px;
 }
 .header-nav { display: flex; gap: 32px; }
 .header-link {
@@ -180,44 +190,49 @@ img { max-width: 100%; display: block; }
 .hero-img::after {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.55) 100%);
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,.35) 55%, rgba(0,0,0,.72) 100%),
+    linear-gradient(90deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,0) 40%);
 }
 .hero-content {
   position: relative;
-  padding: 0 40px 64px;
+  padding: 0 80px 80px;
   color: var(--ivory);
   max-width: 1440px;
   width: 100%;
   margin: 0 auto;
 }
+@media (max-width: 1200px) { .hero-content { padding: 0 40px 64px; } }
 .hero h1 {
   font-family: var(--font-serif);
-  font-size: clamp(44px, 6.5vw, 96px);
-  line-height: 1;
+  font-size: clamp(40px, 6vw, 104px);
+  line-height: .98;
   letter-spacing: -.02em;
   font-weight: 400;
-  max-width: 12ch;
+  max-width: 14ch;
   margin-bottom: 28px;
+  text-shadow: 0 2px 30px rgba(0,0,0,.35);
 }
 .hero h1 em { font-style: italic; color: var(--gold-soft); }
 .hero-sub {
-  max-width: 440px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: rgba(247, 243, 236, .85);
-  margin-bottom: 32px;
+  max-width: 480px;
+  font-size: 16px;
+  line-height: 1.65;
+  color: rgba(247, 243, 236, .88);
+  margin-bottom: 36px;
 }
 .hero-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .hero-marker {
   position: absolute;
-  top: 32px; right: 40px;
+  top: 36px; right: 80px;
   color: var(--ivory);
   font-size: 10px;
-  letter-spacing: .2em;
+  letter-spacing: .22em;
   text-transform: uppercase;
-  opacity: .8;
+  opacity: .85;
   text-align: right;
 }
+@media (max-width: 1200px) { .hero-marker { right: 40px; top: 32px; } }
 .hero-marker .line-v {
   display: block;
   width: 1px; height: 40px;
@@ -334,11 +349,17 @@ img { max-width: 100%; display: block; }
 .pcard-price .old { color: var(--ink-faint); text-decoration: line-through; font-size: 13px; }
 
 /* Grids */
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px 24px; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px 24px; }
-.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; }
-@media (max-width: 960px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 720px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 24px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; }
+@media (max-width: 960px) { .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } .grid-4 { gap: 24px 16px; } }
+@media (max-width: 480px) { .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; } }
+
+/* Responsive form grid (2 cols desktop → 1 col mobile) */
+.grid-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.grid-form .span-all { grid-column: 1 / -1; }
+@media (max-width: 720px) { .grid-form { grid-template-columns: 1fr; gap: 20px; } }
 
 /* ===== Category tile ===== */
 .cat-tile {
@@ -574,15 +595,56 @@ img { max-width: 100%; display: block; }
 }
 .whats-float:hover { background: var(--ink-soft); }
 
-/* Responsive PDP + Checkout layouts */
+/* PDP grid — enforce minmax(0, 1fr) so long words/images don't blow width */
+.pdp-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
 @media (max-width: 960px) {
-  .pdp-grid { grid-template-columns: 1fr !important; gap: 32px !important; padding: 24px 20px 60px !important; }
-  .checkout-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .pdp-grid { grid-template-columns: minmax(0, 1fr); gap: 32px !important; }
+  .checkout-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 40px !important; }
+}
+
+/* Hero — reduce side padding on mobile */
+@media (max-width: 720px) {
+  .hero { height: 72vh; min-height: 520px; }
+  .hero-content { padding: 0 24px 40px !important; }
+  .hero-marker { top: 20px; right: 24px; font-size: 9px; }
+  .hero h1 { margin-bottom: 20px; }
+  .hero-sub { margin-bottom: 24px; font-size: 14px; }
+  .hero-actions { gap: 8px; }
+  .btn { padding: 14px 20px; font-size: 10px; letter-spacing: .14em; }
+  .btn-lg { padding: 16px 24px; }
+}
+
+/* Header responsive */
+@media (max-width: 960px) {
+  .header-row { padding: 18px 0; }
+  .header-nav { gap: 20px; }
+  .header-link { font-size: 11px; letter-spacing: .12em; }
+  .header-actions { gap: 14px; }
 }
 @media (max-width: 720px) {
-  .header-row { grid-template-columns: auto 1fr auto; padding: 14px 0; }
+  .header-row { grid-template-columns: 1fr auto 1fr; padding: 14px 0; }
   .header-nav { display: none; }
-  .header-actions { gap: 12px; }
-  .brand { font-size: 20px; }
-  .footer { padding: 64px 0 24px; margin-top: 72px; }
+  .header-actions { gap: 16px; }
+  .header-actions .hide-sm { display: none; }
+  .brand { font-size: 18px; }
+  .brand-sub { font-size: 8px; }
+  .announce { font-size: 10px; padding: 8px 16px; letter-spacing: .1em; }
+}
+
+/* Sections — reduce padding on mobile */
+@media (max-width: 720px) {
+  .section { padding: 56px 0; }
+  .section-sm { padding: 48px 0; }
+  .section-head { margin-bottom: 32px; }
+  .footer { padding: 56px 0 24px; margin-top: 56px; }
+  .footer-brand { font-size: 36px; }
+  .split-text { padding: 40px 24px !important; }
+  .drawer { width: 100%; }
+  .drawer-head { padding: 18px 20px; }
+  .marquee-track { font-size: 24px; gap: 48px; }
+}
+
+/* PDP sticky info can't be sticky on mobile */
+@media (max-width: 960px) {
+  .pdp-info { position: static !important; }
 }

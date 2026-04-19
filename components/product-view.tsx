@@ -39,7 +39,7 @@ export function ProductView({ id }: { id: string }) {
 
       <div
         className="container pdp-grid"
-        style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 80, padding: '32px 40px 80px' }}
+        style={{ display: 'grid', gap: 80, paddingTop: 32, paddingBottom: 80 }}
       >
         <div>
           <div style={{ aspectRatio: '4/5', background: 'var(--ivory-2)', overflow: 'hidden' }}>
@@ -58,7 +58,7 @@ export function ProductView({ id }: { id: string }) {
           </div>
         </div>
 
-        <div style={{ position: 'sticky', top: 120, alignSelf: 'start' }}>
+        <div className="pdp-info" style={{ position: 'sticky', top: 120, alignSelf: 'start' }}>
           <div className="section-eyebrow">{p.collection}</div>
           <h1 className="serif" style={{ fontSize: 36, fontWeight: 400, lineHeight: 1.15, margin: '8px 0 20px' }}>{p[lang].name}</h1>
           <div className="pdp-price">

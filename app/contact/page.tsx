@@ -16,7 +16,7 @@ export default function ContactPage() {
 
   return (
     <SimplePage title={lang === 'fr' ? 'Nous écrire' : 'Write to us'} eyebrow={lang === 'fr' ? 'Contact' : 'Contact'}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64 }} className="contact-grid">
+      <div className="grid-form" style={{ gap: 'clamp(32px, 6vw, 64px)' }}>
         <div>
           <p className="mute" style={{ fontSize: 15, lineHeight: 1.7, marginBottom: 32 }}>
             {lang === 'fr'

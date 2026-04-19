@@ -65,14 +65,14 @@ export default function CheckoutPage() {
         <div>
           {step === 1 && (
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, rowGap: 24 }}>
+              <div className="grid-form">
                 <div className="field"><label>{lang === 'fr' ? 'Nom complet' : 'Full name'}</label>
                   <input className="input" value={info.name} onChange={e => setInfo({ ...info, name: e.target.value })}/>
                 </div>
                 <div className="field"><label>{lang === 'fr' ? 'Téléphone' : 'Phone'}</label>
                   <input className="input" value={info.phone} onChange={e => setInfo({ ...info, phone: e.target.value })} placeholder="+229 01 97 12 34 56"/>
                 </div>
-                <div className="field" style={{ gridColumn: '1/-1' }}><label>Email</label>
+                <div className="field span-all"><label>Email</label>
                   <input className="input" type="email" value={info.email} onChange={e => setInfo({ ...info, email: e.target.value })}/>
                 </div>
                 <div className="field"><label>{lang === 'fr' ? 'Ville' : 'City'}</label>
@@ -83,7 +83,7 @@ export default function CheckoutPage() {
                 <div className="field"><label>{lang === 'fr' ? 'Quartier' : 'District'}</label>
                   <input className="input" value={info.zone} onChange={e => setInfo({ ...info, zone: e.target.value })}/>
                 </div>
-                <div className="field" style={{ gridColumn: '1/-1' }}><label>{lang === 'fr' ? 'Adresse / repère' : 'Address / landmark'}</label>
+                <div className="field span-all"><label>{lang === 'fr' ? 'Adresse / repère' : 'Address / landmark'}</label>
                   <input className="input" value={info.address} onChange={e => setInfo({ ...info, address: e.target.value })}/>
                 </div>
               </div>

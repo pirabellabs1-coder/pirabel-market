@@ -29,9 +29,9 @@ export function Header() {
             <span className="brand-sub">Cotonou · Est. 2026</span>
           </Link>
           <div className="header-actions">
-            <button className="head-btn" onClick={toggleLang} aria-label="Langue">{lang.toUpperCase()}</button>
-            <button className="head-btn" aria-label={t.search}><Icon.Search/></button>
-            <Link className="head-btn" href="/compte" aria-label={t.account}><Icon.User/></Link>
+            <button className="head-btn hide-sm" onClick={toggleLang} aria-label="Langue">{lang.toUpperCase()}</button>
+            <button className="head-btn hide-sm" aria-label={t.search}><Icon.Search/></button>
+            <Link className="head-btn hide-sm" href="/compte" aria-label={t.account}><Icon.User/></Link>
             <Link className="head-btn" href="/compte?tab=wish" aria-label={t.wishlist}>
               <Icon.Heart/>{wish.length > 0 && <span className="count">{wish.length}</span>}
             </Link>
