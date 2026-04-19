@@ -30,6 +30,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/commandes">Commandes</Link>
           <Link href="/admin/categories">Catégories</Link>
           <Link href="/admin/clients">Clients</Link>
+          <div style={{ height: 1, background: 'var(--line)', margin: '10px 12px' }}/>
+          <Link href="/admin/journal">Journal</Link>
+          <Link href="/admin/promos">Codes promo</Link>
+          <Link href="/admin/popups">Popups</Link>
+          <Link href="/admin/avis">Avis clients</Link>
+          <Link href="/admin/newsletter">Newsletter</Link>
         </nav>
         <div style={{ marginTop: 'auto', padding: '20px 0', borderTop: '1px solid var(--line)' }}>
           <div className="caps mute" style={{ fontSize: 9 }}>Connecté en tant que</div>

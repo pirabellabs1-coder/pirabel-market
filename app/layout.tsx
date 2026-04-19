@@ -7,7 +7,9 @@ import { CartDrawer } from '@/components/cart-drawer';
 import { Toast } from '@/components/toast';
 import { WhatsAppFloat } from '@/components/whatsapp-float';
 import { SearchModal } from '@/components/search-modal';
+import { PopupHost } from '@/components/popup-host';
 import { getProducts } from '@/lib/db';
+import { createAdminClient } from '@/lib/supabase/admin';
 import './globals.css';
 
 const playfair = Playfair_Display({
@@ -38,10 +40,28 @@ export const metadata: Metadata = {
   icons: { icon: '/favicon.svg' },
 };
 
+async function fetchActivePopups() {
+  try {
+    const sb = createAdminClient();
+    const { data } = await sb
+      .from('popups')
+      .select('id, title, body, cta_label, cta_url, image, position, trigger_type, trigger_value, show_once')
+      .eq('active', true)
+      .or(`ends_at.is.null,ends_at.gt.${new Date().toISOString()}`)
+      .lte('starts_at', new Date().toISOString())
+      .limit(3);
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Fetch products once at layout level for the search modal.
-  // This is cached (unstable_cache 60s in lib/db.ts) so it's cheap.
-  const products = await getProducts();
+  // Fetch products + popups once at layout level (cached).
+  const [products, popups] = await Promise.all([
+    getProducts(),
+    fetchActivePopups(),
+  ]);
 
   return (
     <html lang="fr" data-theme="light" className={`${playfair.variable} ${inter.variable} ${jetbrains.variable}`} suppressHydrationWarning>
@@ -52,6 +72,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Footer/>
           <CartDrawer/>
           <SearchModal products={products}/>
+          <PopupHost popups={popups}/>
           <WhatsAppFloat/>
           <Toast/>
         </StoreProvider>

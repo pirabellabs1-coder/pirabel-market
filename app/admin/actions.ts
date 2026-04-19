@@ -173,6 +173,234 @@ export async function updateOrderStatus(id: string, status: string) {
 
 // ============ HELPERS ============
 
+// ============ JOURNAL POSTS ============
+
+export async function createJournalPost(formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+
+  const title_fr = formData.get('title_fr')?.toString() || '';
+  const slug = (formData.get('slug')?.toString() || slugify(title_fr));
+  const published = formData.get('published') === 'on';
+
+  const row = {
+    slug,
+    title_fr,
+    title_en: formData.get('title_en')?.toString() || null,
+    excerpt_fr: formData.get('excerpt_fr')?.toString() || null,
+    excerpt_en: formData.get('excerpt_en')?.toString() || null,
+    body_fr: formData.get('body_fr')?.toString() || '',
+    body_en: formData.get('body_en')?.toString() || null,
+    cover_img: formData.get('cover_img')?.toString() || null,
+    category: formData.get('category')?.toString() || null,
+    author: formData.get('author')?.toString() || 'Pirabel',
+    published,
+    published_at: published ? new Date().toISOString() : null,
+  };
+
+  const { error } = await sb.from('journal_posts').insert(row);
+  if (error) throw new Error(error.message);
+
+  updateTag('journal');
+  revalidatePath('/admin/journal', 'page');
+  revalidatePath('/journal', 'page');
+  redirect('/admin/journal');
+}
+
+export async function updateJournalPost(id: string, formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+
+  const title_fr = formData.get('title_fr')?.toString() || '';
+  const published = formData.get('published') === 'on';
+
+  // Fetch current to preserve published_at if already published
+  const { data: current } = await sb.from('journal_posts').select('published, published_at').eq('id', id).maybeSingle();
+
+  const row = {
+    slug: formData.get('slug')?.toString() || slugify(title_fr),
+    title_fr,
+    title_en: formData.get('title_en')?.toString() || null,
+    excerpt_fr: formData.get('excerpt_fr')?.toString() || null,
+    excerpt_en: formData.get('excerpt_en')?.toString() || null,
+    body_fr: formData.get('body_fr')?.toString() || '',
+    body_en: formData.get('body_en')?.toString() || null,
+    cover_img: formData.get('cover_img')?.toString() || null,
+    category: formData.get('category')?.toString() || null,
+    author: formData.get('author')?.toString() || 'Pirabel',
+    published,
+    published_at: published
+      ? (current?.published ? current.published_at : new Date().toISOString())
+      : null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await sb.from('journal_posts').update(row).eq('id', id);
+  if (error) throw new Error(error.message);
+
+  updateTag('journal');
+  revalidatePath('/admin/journal', 'page');
+  revalidatePath('/journal', 'page');
+  revalidatePath(`/journal/${row.slug}`, 'page');
+  redirect('/admin/journal');
+}
+
+export async function deleteJournalPost(id: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const { error } = await sb.from('journal_posts').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  updateTag('journal');
+  revalidatePath('/admin/journal', 'page');
+  revalidatePath('/journal', 'page');
+}
+
+// ============ PROMOS ============
+
+export async function createPromo(formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const code = (formData.get('code')?.toString() || '').toUpperCase().replace(/\s+/g, '');
+  if (!code) throw new Error('Code requis');
+  const row = {
+    code,
+    type: (formData.get('type')?.toString() as 'percent' | 'fixed' | 'free_shipping') || 'percent',
+    value: parseInt(formData.get('value')?.toString() || '0', 10),
+    min_order: parseInt(formData.get('min_order')?.toString() || '0', 10),
+    max_uses: formData.get('max_uses') ? parseInt(formData.get('max_uses')!.toString(), 10) : null,
+    valid_until: formData.get('valid_until')?.toString() || null,
+    description: formData.get('description')?.toString() || null,
+    active: formData.get('active') === 'on',
+  };
+  const { error } = await sb.from('promo_codes').insert(row);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/promos', 'page');
+  redirect('/admin/promos');
+}
+
+export async function updatePromo(code: string, formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const row = {
+    type: formData.get('type')?.toString() as 'percent' | 'fixed' | 'free_shipping',
+    value: parseInt(formData.get('value')?.toString() || '0', 10),
+    min_order: parseInt(formData.get('min_order')?.toString() || '0', 10),
+    max_uses: formData.get('max_uses') ? parseInt(formData.get('max_uses')!.toString(), 10) : null,
+    valid_until: formData.get('valid_until')?.toString() || null,
+    description: formData.get('description')?.toString() || null,
+    active: formData.get('active') === 'on',
+  };
+  const { error } = await sb.from('promo_codes').update(row).eq('code', code);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/promos', 'page');
+}
+
+export async function deletePromo(code: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const { error } = await sb.from('promo_codes').delete().eq('code', code);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/promos', 'page');
+}
+
+// ============ POPUPS ============
+
+export async function upsertPopup(formData: FormData) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const id = formData.get('id')?.toString();
+  const row = {
+    title: formData.get('title')?.toString() || '',
+    body: formData.get('body')?.toString() || null,
+    cta_label: formData.get('cta_label')?.toString() || null,
+    cta_url: formData.get('cta_url')?.toString() || null,
+    image: formData.get('image')?.toString() || null,
+    position: formData.get('position')?.toString() || 'center',
+    trigger_type: formData.get('trigger_type')?.toString() || 'delay',
+    trigger_value: parseInt(formData.get('trigger_value')?.toString() || '5', 10),
+    show_once: formData.get('show_once') === 'on',
+    active: formData.get('active') === 'on',
+    ends_at: formData.get('ends_at')?.toString() || null,
+  };
+  const { error } = id
+    ? await sb.from('popups').update(row).eq('id', id)
+    : await sb.from('popups').insert(row);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/popups', 'page');
+  revalidatePath('/', 'layout');
+}
+
+export async function deletePopup(id: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const { error } = await sb.from('popups').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/popups', 'page');
+}
+
+// ============ REVIEWS ============
+
+export async function approveReview(id: string, approved: boolean) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const { error } = await sb.from('reviews').update({ approved }).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/avis', 'page');
+}
+
+export async function deleteReview(id: string) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const { error } = await sb.from('reviews').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/avis', 'page');
+}
+
+// ============ COLLABORATORS / ADMIN ROLE ============
+
+export async function setAdmin(userId: string, isAdmin: boolean) {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const { error } = await sb.from('profiles').update({ is_admin: isAdmin }).eq('id', userId);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/clients', 'page');
+}
+
+export async function inviteAdmin(formData: FormData): Promise<{ email: string; createdPassword?: string }> {
+  await requireAdmin();
+  const sb = createAdminClient();
+  const email = formData.get('email')?.toString().trim().toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Email invalide');
+  const first_name = formData.get('first_name')?.toString() || null;
+  const last_name = formData.get('last_name')?.toString() || null;
+
+  const { data: list } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  let user = list?.users?.find(u => u.email?.toLowerCase() === email);
+  let createdPassword: string | undefined;
+
+  if (!user) {
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    createdPassword = Array.from(bytes, b => alphabet[b % alphabet.length]).join('');
+    const { data: created, error: createErr } = await sb.auth.admin.createUser({
+      email, password: createdPassword, email_confirm: true,
+    });
+    if (createErr || !created.user) throw new Error(createErr?.message || 'Création échouée');
+    user = created.user;
+  }
+
+  const { error: upErr } = await sb
+    .from('profiles')
+    .upsert({ id: user.id, first_name, last_name, is_admin: true }, { onConflict: 'id' });
+  if (upErr) throw new Error(upErr.message);
+
+  revalidatePath('/admin/clients', 'page');
+  return { email, createdPassword };
+}
+
+// ============ HELPERS ============
+
 function parseList(raw: string | undefined): string[] | null {
   if (!raw) return null;
   const list = raw.split(',').map(s => s.trim()).filter(Boolean);

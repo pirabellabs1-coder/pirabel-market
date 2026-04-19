@@ -24,7 +24,29 @@ export default function CheckoutPage() {
     .map(c => ({ ...c, p: products.find(x => x.id === c.id) }))
     .filter((x): x is typeof x & { p: NonNullable<typeof x.p> } => !!x.p), [cart]);
   const subtotal = items.reduce((s, i) => s + i.p.price * i.qty, 0);
-  const delivery = subtotal > 50000 ? 0 : 2500;
+
+  // Promo state
+  const [promoCode, setPromoCode] = useState('');
+  const [promoApplied, setPromoApplied] = useState<{ code: string; discount: number; free_shipping: boolean; description?: string } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+
+  const applyPromo = async () => {
+    setPromoError(null); setPromoLoading(true);
+    try {
+      const res = await fetch('/api/promo', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ code: promoCode, subtotal }),
+      });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || 'Code invalide');
+      setPromoApplied({ code: j.code, discount: j.discount, free_shipping: j.free_shipping, description: j.description });
+    } catch (e) { setPromoError((e as Error).message); setPromoApplied(null); }
+    finally { setPromoLoading(false); }
+  };
+
+  const discount = promoApplied?.discount ?? 0;
+  const delivery = promoApplied?.free_shipping ? 0 : (subtotal > 50000 ? 0 : 2500);
 
   if (items.length === 0 && step < 4) {
     return (
@@ -153,6 +175,7 @@ export default function CheckoutPage() {
                         body: JSON.stringify({
                           items: cart.map(c => ({ id: c.id, qty: c.qty, size: c.size, color: c.color })),
                           payment_method: pay,
+                          promo_code: promoApplied?.code,
                           shipping: { name: info.name, phone: info.phone, email: info.email || undefined, city: info.city, zone: info.zone, address: info.address },
                         }),
                       });
@@ -173,7 +196,7 @@ export default function CheckoutPage() {
                 >
                   {placing
                     ? (lang === 'fr' ? 'Enregistrement…' : 'Placing…')
-                    : `${lang === 'fr' ? 'Payer' : 'Pay'} ${fmt(subtotal + delivery)}`}
+                    : `${lang === 'fr' ? 'Payer' : 'Pay'} ${fmt(Math.max(0, subtotal + delivery - discount))}`}
                 </button>
               </div>
             </div>
@@ -219,17 +242,48 @@ export default function CheckoutPage() {
                 ))}
               </div>
               <div style={{ borderTop: '1px solid var(--line)', paddingTop: 16 }}>
+                {/* Promo code input */}
+                {!promoApplied ? (
+                  <div className="row gap-2 mb-4">
+                    <input
+                      className="input"
+                      style={{ flex: 1, fontFamily: 'monospace' }}
+                      placeholder={lang === 'fr' ? 'Code promo' : 'Promo code'}
+                      value={promoCode}
+                      onChange={e => setPromoCode(e.target.value.toUpperCase())}
+                    />
+                    <button type="button" className="btn btn-outline btn-sm" onClick={applyPromo} disabled={!promoCode.trim() || promoLoading}>
+                      {promoLoading ? '…' : (lang === 'fr' ? 'Appliquer' : 'Apply')}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="row between mb-4" style={{ padding: 10, background: 'var(--ivory)', border: '1px solid var(--line)' }}>
+                    <div>
+                      <div className="mono" style={{ fontSize: 12 }}>{promoApplied.code}</div>
+                      <div className="mute" style={{ fontSize: 11 }}>{promoApplied.description || (promoApplied.free_shipping ? 'Livraison offerte' : `−${fmt(promoApplied.discount)}`)}</div>
+                    </div>
+                    <button type="button" onClick={() => { setPromoApplied(null); setPromoCode(''); }} className="mute" style={{ fontSize: 12 }}>✕</button>
+                  </div>
+                )}
+                {promoError && <p style={{ color: '#a63d2a', fontSize: 12, marginBottom: 12 }}>{promoError}</p>}
+
                 <div className="row between mb-2">
                   <span className="mute" style={{ fontSize: 13 }}>{lang === 'fr' ? 'Sous-total' : 'Subtotal'}</span>
                   <span>{fmt(subtotal)}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="row between mb-2">
+                    <span className="mute" style={{ fontSize: 13, color: 'var(--gold)' }}>{lang === 'fr' ? 'Remise' : 'Discount'}</span>
+                    <span style={{ color: 'var(--gold)' }}>−{fmt(discount)}</span>
+                  </div>
+                )}
                 <div className="row between mb-4">
                   <span className="mute" style={{ fontSize: 13 }}>{lang === 'fr' ? 'Livraison' : 'Shipping'}</span>
                   <span>{delivery === 0 ? (lang === 'fr' ? 'Offerte' : 'Free') : fmt(delivery)}</span>
                 </div>
                 <div className="row between" style={{ paddingTop: 16, borderTop: '1px solid var(--line)' }}>
                   <span className="caps">{lang === 'fr' ? 'Total' : 'Total'}</span>
-                  <span className="serif" style={{ fontSize: 22 }}>{fmt(subtotal + delivery)}</span>
+                  <span className="serif" style={{ fontSize: 22 }}>{fmt(Math.max(0, subtotal + delivery - discount))}</span>
                 </div>
               </div>
             </div>

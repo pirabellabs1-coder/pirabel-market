@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Icon } from './icons';
 import { ProductCard } from './product-card';
+import { ProductReviews } from './product-reviews';
 import { useStore } from './store-provider';
 import type { Product } from '@/lib/types';
 import { fmt } from '@/lib/format';
@@ -29,6 +30,8 @@ export function ProductView({ product, related }: Props) {
   }
 
   const thumbs = [p.img, p.img2, p.img, p.img2].filter((x): x is string => !!x);
+  const outOfStock = p.stock === 0;
+  const lowStock = typeof p.stock === 'number' && p.stock > 0 && p.stock <= 5;
 
   return (
     <main>
@@ -110,18 +113,27 @@ export function ProductView({ product, related }: Props) {
             </div>
           )}
 
+          {lowStock && (
+            <p className="mt-6" style={{ fontSize: 13, color: 'var(--gold)', letterSpacing: '.04em' }}>
+              {lang === 'fr' ? `Plus que ${p.stock} exemplaire${(p.stock ?? 0) > 1 ? 's' : ''} disponible${(p.stock ?? 0) > 1 ? 's' : ''}.` : `Only ${p.stock} left in stock.`}
+            </p>
+          )}
+
           <div className="mt-8 row gap-3">
-            <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--line)' }}>
-              <button onClick={() => setQty(Math.max(1, qty - 1))} style={{ width: 44, height: 52 }} aria-label="−"><Icon.Minus/></button>
+            <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--line)', opacity: outOfStock ? 0.5 : 1 }}>
+              <button onClick={() => setQty(Math.max(1, qty - 1))} style={{ width: 44, height: 52 }} aria-label="−" disabled={outOfStock}><Icon.Minus/></button>
               <span style={{ minWidth: 32, textAlign: 'center', fontSize: 14 }}>{qty}</span>
-              <button onClick={() => setQty(qty + 1)} style={{ width: 44, height: 52 }} aria-label="+"><Icon.Plus/></button>
+              <button onClick={() => setQty(qty + 1)} style={{ width: 44, height: 52 }} aria-label="+" disabled={outOfStock}><Icon.Plus/></button>
             </div>
             <button
               className="btn btn-primary btn-lg"
               style={{ flex: 1, height: 52 }}
+              disabled={outOfStock}
               onClick={() => { for (let i = 0; i < qty; i++) addToCart(p.id, size, color?.n); }}
             >
-              {lang === 'fr' ? 'Ajouter au sac' : 'Add to bag'}
+              {outOfStock
+                ? (lang === 'fr' ? 'Rupture de stock' : 'Out of stock')
+                : (lang === 'fr' ? 'Ajouter au sac' : 'Add to bag')}
             </button>
             <button className="btn btn-outline" style={{ height: 52, padding: '0 20px' }} onClick={() => toggleWish(p.id)} aria-label="Favori">
               <Icon.Heart/>
@@ -144,6 +156,8 @@ export function ProductView({ product, related }: Props) {
           </div>
         </div>
       </div>
+
+      <ProductReviews productId={p.id}/>
 
       {related.length > 0 && (
         <section className="section-sm" style={{ background: 'var(--ivory-2)' }}>

@@ -59,6 +59,7 @@ function toProduct(p: DBProduct): Product {
     tag: p.tag ?? undefined,
     size: p.sizes ?? undefined,
     color: p.colors ?? undefined,
+    stock: p.stock,
   };
 }
 

@@ -13,6 +13,7 @@ export function ProductCard({ p }: { p: Product }) {
   const [hovered, setHovered] = useState(false);
   const wished = wish.includes(p.id);
   const discount = p.old ? Math.round((1 - p.price / p.old) * 100) : 0;
+  const outOfStock = p.stock === 0;
 
   const onCardClick = () => router.push(`/produit/${p.id}`);
   const onWishClick = (e: MouseEvent) => { e.stopPropagation(); toggleWish(p.id); };
@@ -29,8 +30,9 @@ export function ProductCard({ p }: { p: Product }) {
       onKeyDown={(e) => { if (e.key === 'Enter') onCardClick(); }}
     >
       <div className="pcard-img">
-        {p.tag && <span className="pcard-label">{p.tag}</span>}
-        {discount > 0 && <span className="pcard-label" style={{ top: p.tag ? 36 : 12 }}>−{discount}%</span>}
+        {outOfStock && <span className="pcard-label" style={{ background: 'var(--ink)', color: 'var(--ivory)' }}>Rupture</span>}
+        {!outOfStock && p.tag && <span className="pcard-label">{p.tag}</span>}
+        {!outOfStock && discount > 0 && <span className="pcard-label" style={{ top: p.tag ? 36 : 12 }}>−{discount}%</span>}
         <button className={`pcard-wish ${wished ? 'active' : ''}`} onClick={onWishClick} aria-label="Favori">
           <Icon.Heart/>
         </button>

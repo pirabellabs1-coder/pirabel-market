@@ -8,6 +8,7 @@ type IncomingItem = { id: string; qty: number; size?: string; color?: string };
 type IncomingOrder = {
   items: IncomingItem[];
   payment_method: 'mtn' | 'moov' | 'celtiis' | 'card' | 'cod';
+  promo_code?: string;
   shipping: {
     name: string;
     phone: string;
@@ -67,9 +68,27 @@ export async function POST(request: Request) {
   }
 
   const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
-  const delivery = subtotal > 50000 ? 0 : 2500;
-  const total = subtotal + delivery;
+  let delivery = subtotal > 50000 ? 0 : 2500;
+  let discount = 0;
+  let appliedPromo: string | null = null;
 
+  // Server-side promo validation
+  if (body.promo_code) {
+    const code = body.promo_code.trim().toUpperCase();
+    const { data: promo } = await sb.from('promo_codes').select('*').eq('code', code).eq('active', true).maybeSingle();
+    if (promo
+      && (!promo.valid_until || new Date(promo.valid_until).getTime() > Date.now())
+      && (promo.max_uses == null || promo.uses_count < promo.max_uses)
+      && subtotal >= (promo.min_order || 0)
+    ) {
+      if (promo.type === 'percent') discount = Math.floor(subtotal * (promo.value / 100));
+      else if (promo.type === 'fixed') discount = Math.min(promo.value, subtotal);
+      else if (promo.type === 'free_shipping') delivery = 0;
+      appliedPromo = promo.code;
+    }
+  }
+
+  const total = Math.max(0, subtotal + delivery - discount);
   const id = orderId();
 
   // Insert order
@@ -80,6 +99,8 @@ export async function POST(request: Request) {
     subtotal,
     delivery,
     total,
+    discount,
+    promo_code: appliedPromo,
     payment_method: body.payment_method,
     shipping_name: body.shipping.name,
     shipping_phone: body.shipping.phone,
@@ -89,6 +110,14 @@ export async function POST(request: Request) {
     shipping_address: body.shipping.address ?? null,
   });
   if (oErr) return NextResponse.json({ error: oErr.message }, { status: 500 });
+
+  // Increment promo uses_count
+  if (appliedPromo) {
+    const { data: p } = await sb.from('promo_codes').select('uses_count').eq('code', appliedPromo).single();
+    if (p) {
+      await sb.from('promo_codes').update({ uses_count: (p.uses_count ?? 0) + 1 }).eq('code', appliedPromo);
+    }
+  }
 
   // Insert items
   const { error: iErr } = await sb.from('order_items').insert(

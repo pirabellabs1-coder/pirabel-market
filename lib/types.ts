@@ -23,6 +23,7 @@ export type Product = {
   tag?: string;
   size?: string[];
   color?: Color[];
+  stock?: number; // -1 = unlimited, 0 = out, >0 = remaining
 };
 
 export type Category = {

@@ -173,6 +173,57 @@ export async function sendOrderConfirmation(order: Order) {
   });
 }
 
+export async function sendSignupOtp(email: string, code: string) {
+  const inner = `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:30px;font-weight:400;margin:0 0 12px;text-align:center;">Bienvenue chez Pirabel.</h1>
+    <p style="font-size:15px;color:#2c2821;line-height:1.6;text-align:center;margin:0 0 32px;">Pour finaliser la création de ton compte, entre le code ci-dessous sur la page d&apos;inscription.</p>
+
+    <div style="margin:0 auto;padding:28px;background:#ede7dc;border:1px solid #d9d2c4;text-align:center;max-width:340px;">
+      <div style="font-size:10px;letter-spacing:0.24em;text-transform:uppercase;color:#6b6459;margin-bottom:12px;">Ton code de vérification</div>
+      <div style="font-family:'Courier New',Courier,monospace;font-size:36px;font-weight:500;letter-spacing:0.3em;color:#14110d;line-height:1;">${escape(code)}</div>
+      <div style="font-size:11px;color:#9c9589;margin-top:16px;">Valable 10 minutes</div>
+    </div>
+
+    <p style="margin-top:32px;font-size:12px;color:#9c9589;line-height:1.7;text-align:center;">Si tu n&apos;as pas demandé ce code, ignore simplement cet email.</p>
+  `;
+  await safeSend({
+    from: FROM,
+    to: email,
+    subject: `Ton code Pirabel : ${code}`,
+    html: layout('Code de vérification', inner, 'Code de vérification'),
+  });
+}
+
+export async function sendWelcomeEmail(email: string, firstName?: string | null) {
+  const greet = firstName ? `Bienvenue ${escape(firstName)}.` : 'Bienvenue.';
+  const inner = `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:34px;font-weight:400;margin:0 0 16px;line-height:1.15;">${greet}</h1>
+    <p style="font-size:15px;color:#2c2821;line-height:1.7;margin:0 0 28px;">Ton compte Pirabel est actif. Tu peux désormais passer commande, suivre tes livraisons, enregistrer tes favoris et bénéficier de nos collections exclusives — depuis Cotonou, livré avec soin partout au Bénin.</p>
+
+    <div style="margin:24px 0;padding:24px;background:#ede7dc;border-left:3px solid #8a6b3a;">
+      <div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#6b6459;margin-bottom:8px;">Cadeau de bienvenue</div>
+      <div style="font-family:Georgia,serif;font-size:22px;line-height:1.2;margin-bottom:8px;">20% sur ta première commande</div>
+      <div style="font-size:13px;color:#2c2821;">Code : <code style="font-family:monospace;background:#fdfbf7;padding:4px 10px;border:1px solid #d9d2c4;">BIENVENUE20</code></div>
+      <div style="font-size:11px;color:#9c9589;margin-top:8px;">Valable à l&apos;achat, sans minimum.</div>
+    </div>
+
+    <div style="margin-top:32px;text-align:center;">
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://pirabel-one.store'}/catalogue"
+         style="display:inline-block;background:#14110d;color:#f7f3ec;padding:16px 36px;text-decoration:none;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;font-weight:500;">
+        Découvrir la boutique
+      </a>
+    </div>
+
+    <p style="margin-top:32px;font-size:12px;color:#9c9589;line-height:1.7;text-align:center;">Besoin d&apos;aide ? Réponds à cet email — on répond en 2h ouvrées.</p>
+  `;
+  await safeSend({
+    from: FROM,
+    to: email,
+    subject: 'Bienvenue chez Pirabel',
+    html: layout('Bienvenue', inner, 'Bienvenue'),
+  });
+}
+
 export async function sendOrderStatusUpdate(order: Order & { status: string }, previousStatus: string) {
   if (!order.shipping_email) return;
   const labels: Record<string, string> = {

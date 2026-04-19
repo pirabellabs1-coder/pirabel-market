@@ -755,3 +755,61 @@ img { max-width: 100%; display: block; }
 @media (max-width: 480px) {
   .admin-stats { grid-template-columns: 1fr; }
 }
+
+/* ===== Journal article body (markdown rendered) ===== */
+.journal-body { font-family: var(--font-sans); }
+.journal-body h1, .journal-body h2, .journal-body h3 {
+  font-family: var(--font-serif); font-weight: 400; letter-spacing: -.005em; color: var(--ink);
+  margin-top: 1.6em; margin-bottom: .6em; line-height: 1.25;
+}
+.journal-body h1 { font-size: 28px; }
+.journal-body h2 { font-size: 24px; }
+.journal-body h3 { font-size: 20px; }
+.journal-body p { margin: 0 0 1.3em; }
+.journal-body a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.journal-body a:hover { color: var(--accent); }
+.journal-body img { max-width: 100%; height: auto; margin: 2em 0; }
+.journal-body blockquote {
+  border-left: 3px solid var(--gold);
+  padding: 4px 20px;
+  font-style: italic;
+  color: var(--ink-mute);
+  margin: 1.5em 0;
+  font-size: 17px;
+}
+.journal-body ul, .journal-body ol { margin: 0 0 1.3em 1.2em; }
+.journal-body li { margin-bottom: .4em; }
+.journal-body code {
+  font-family: var(--font-mono);
+  background: var(--ivory-2);
+  padding: 2px 8px;
+  font-size: .9em;
+}
+.journal-body hr { border: 0; height: 1px; background: var(--line); margin: 2.5em 0; }
+
+/* ===== Popup overlay ===== */
+.popup-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 500;
+  display: grid; place-items: center; padding: 24px;
+  animation: fadeIn .2s;
+}
+.popup-card {
+  background: var(--ivory); max-width: 440px; width: 100%;
+  border: 1px solid var(--line);
+  position: relative;
+  animation: popIn .3s cubic-bezier(.2,.6,.2,1);
+}
+@keyframes popIn { from { transform: translateY(16px) scale(.97); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+.popup-close {
+  position: absolute; top: 12px; right: 12px;
+  width: 32px; height: 32px; display: grid; place-items: center;
+  color: var(--ink-mute); z-index: 1;
+}
+.popup-close:hover { color: var(--ink); }
+.popup-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: var(--ivory-2); }
+.popup-content { padding: 28px 28px 32px; text-align: center; }
+
+/* ===== Rating stars ===== */
+.stars { display: inline-flex; gap: 2px; }
+.star-btn { padding: 2px; background: none; border: 0; cursor: pointer; color: var(--ink-faint); }
+.star-btn.active, .star-btn:hover { color: var(--gold); }
