@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useStore } from './store-provider';
 import { i18n } from '@/lib/i18n';
+import { BRAND } from '@/lib/brand';
 
 export function Footer() {
   const { lang } = useStore();
@@ -41,10 +42,10 @@ export function Footer() {
           <div>
             <h5>{lang === 'fr' ? 'Boutique' : 'Boutique'}</h5>
             <ul>
-              <li>Haie Vive, Cotonou</li>
-              <li>+229 01 97 12 34 56</li>
-              <li>support@pirabel-one.store</li>
-              <li style={{ marginTop: 8 }}><a href="https://wa.me/2290197123456" target="_blank" rel="noopener">WhatsApp</a></li>
+              <li>{BRAND.address}</li>
+              <li>{BRAND.phoneDisplay}</li>
+              <li>{BRAND.contactEmail}</li>
+              <li style={{ marginTop: 8 }}><a href={BRAND.whatsappUrl} target="_blank" rel="noopener">WhatsApp</a></li>
             </ul>
           </div>
         </div>

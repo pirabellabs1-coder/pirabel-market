@@ -73,7 +73,7 @@ export default function CheckoutPage() {
                   <input className="input" value={info.name} onChange={e => setInfo({ ...info, name: e.target.value })}/>
                 </div>
                 <div className="field"><label>{lang === 'fr' ? 'Téléphone' : 'Phone'}</label>
-                  <input className="input" value={info.phone} onChange={e => setInfo({ ...info, phone: e.target.value })} placeholder="+229 01 97 12 34 56"/>
+                  <input className="input" value={info.phone} onChange={e => setInfo({ ...info, phone: e.target.value })} placeholder="+229 01 49 44 67 20"/>
                 </div>
                 <div className="field span-all"><label>Email</label>
                   <input className="input" type="email" value={info.email} onChange={e => setInfo({ ...info, email: e.target.value })}/>

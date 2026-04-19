@@ -6,6 +6,8 @@ import { Footer } from '@/components/footer';
 import { CartDrawer } from '@/components/cart-drawer';
 import { Toast } from '@/components/toast';
 import { WhatsAppFloat } from '@/components/whatsapp-float';
+import { SearchModal } from '@/components/search-modal';
+import { getProducts } from '@/lib/db';
 import './globals.css';
 
 const playfair = Playfair_Display({
@@ -36,7 +38,11 @@ export const metadata: Metadata = {
   icons: { icon: '/favicon.svg' },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Fetch products once at layout level for the search modal.
+  // This is cached (unstable_cache 60s in lib/db.ts) so it's cheap.
+  const products = await getProducts();
+
   return (
     <html lang="fr" data-theme="light" className={`${playfair.variable} ${inter.variable} ${jetbrains.variable}`} suppressHydrationWarning>
       <body>
@@ -45,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <Footer/>
           <CartDrawer/>
+          <SearchModal products={products}/>
           <WhatsAppFloat/>
           <Toast/>
         </StoreProvider>

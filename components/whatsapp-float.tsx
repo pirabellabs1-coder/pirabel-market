@@ -1,8 +1,9 @@
 import { Icon } from './icons';
+import { BRAND } from '@/lib/brand';
 
 export function WhatsAppFloat() {
   return (
-    <a href="https://wa.me/2290197123456" target="_blank" rel="noopener" className="whats-float" aria-label="WhatsApp">
+    <a href={BRAND.whatsappUrl} target="_blank" rel="noopener" className="whats-float" aria-label="WhatsApp">
       <Icon.Whats/>
     </a>
   );

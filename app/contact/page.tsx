@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { SimplePage } from '@/components/simple-page';
 import { Icon } from '@/components/icons';
 import { useStore } from '@/components/store-provider';
+import { BRAND } from '@/lib/brand';
 
 export default function ContactPage() {
   const { lang } = useStore();
@@ -24,9 +25,9 @@ export default function ContactPage() {
               : 'A question or special request? Our team responds within 2h on weekdays.'}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div><div className="caps mute mb-2">WhatsApp</div><div>+229 01 97 12 34 56</div></div>
-            <div><div className="caps mute mb-2">Email</div><div>support@pirabel-one.store</div></div>
-            <div><div className="caps mute mb-2">{lang === 'fr' ? 'Adresse' : 'Address'}</div><div>Haie Vive, Cotonou · Bénin</div></div>
+            <div><div className="caps mute mb-2">WhatsApp</div><div><a href={BRAND.whatsappUrl} target="_blank" rel="noopener">{BRAND.phoneDisplay}</a></div></div>
+            <div><div className="caps mute mb-2">Email</div><div><a href={`mailto:${BRAND.contactEmail}`}>{BRAND.contactEmail}</a></div></div>
+            <div><div className="caps mute mb-2">{lang === 'fr' ? 'Adresse' : 'Address'}</div><div>{BRAND.address} · {BRAND.country}</div></div>
           </div>
         </div>
         <form onSubmit={onSubmit}>

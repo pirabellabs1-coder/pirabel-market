@@ -7,7 +7,7 @@ import { Icon } from './icons';
 import { i18n } from '@/lib/i18n';
 
 export function Header() {
-  const { lang, toggleLang, cartCount, wish, openBag } = useStore();
+  const { lang, toggleLang, cartCount, wish, openBag, openSearch } = useStore();
   const t = i18n[lang];
   const pathname = usePathname();
   const isCatalog = (cat: string) => pathname.startsWith(`/catalogue/${cat}`);
@@ -19,7 +19,7 @@ export function Header() {
         <div className="container header-top">
           <div className="header-side header-side-left">
             <button className="head-btn hide-sm" onClick={toggleLang} aria-label="Langue">{lang.toUpperCase()}</button>
-            <button className="head-btn hide-sm" aria-label={t.search}><Icon.Search/></button>
+            <button className="head-btn" onClick={openSearch} aria-label={t.search}><Icon.Search/></button>
           </div>
 
           <Link className="brand" href="/">

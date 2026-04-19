@@ -30,6 +30,10 @@ type StoreValue = {
   openBag: () => void;
   closeBag: () => void;
 
+  searchOpen: boolean;
+  openSearch: () => void;
+  closeSearch: () => void;
+
   toast: string;
   showToast: (msg: string) => void;
 };
@@ -59,6 +63,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wish, setWish] = useState<string[]>([]);
   const [bagOpen, setBagOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [toast, setToast] = useState('');
 
   useEffect(() => {
@@ -103,6 +108,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const openBag = () => setBagOpen(true);
   const closeBag = () => setBagOpen(false);
+  const openSearch = () => setSearchOpen(true);
+  const closeSearch = () => setSearchOpen(false);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -115,6 +122,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     cart, addToCart, removeFromCart, setQty, clearCart, cartCount, cartSubtotal,
     wish, toggleWish,
     bagOpen, openBag, closeBag,
+    searchOpen, openSearch, closeSearch,
     toast, showToast,
   };
 

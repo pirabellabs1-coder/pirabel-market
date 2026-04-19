@@ -74,15 +74,8 @@ export function AccountContent({ initialTab, email, profile, orders, wishProduct
         ))}
       </div>
 
-      {profile.is_admin && (
-        <div className="row between wrap gap-3 mb-8" style={{ padding: 16, background: 'var(--ivory-2)', border: '1px solid var(--line)' }}>
-          <div>
-            <div className="caps mute" style={{ fontSize: 10 }}>{lang === 'fr' ? 'Accès admin' : 'Admin access'}</div>
-            <div style={{ marginTop: 4 }}>{lang === 'fr' ? 'Gère le catalogue, les commandes et les clients.' : 'Manage catalog, orders and customers.'}</div>
-          </div>
-          <Link className="btn btn-outline" href="/admin">{lang === 'fr' ? 'Espace admin' : 'Admin panel'} →</Link>
-        </div>
-      )}
+      {/* Admin access: no banner on the public /compte page to keep the admin
+          door discreet. Admins bookmark /admin directly. */}
 
       {tab === 'orders' && (
         orders.length === 0 ? (
@@ -140,7 +133,7 @@ export function AccountContent({ initialTab, email, profile, orders, wishProduct
           <div className="field"><label>{lang === 'fr' ? 'Prénom' : 'First name'}</label><input name="first_name" className="input" defaultValue={profile.first_name ?? ''}/></div>
           <div className="field"><label>{lang === 'fr' ? 'Nom' : 'Last name'}</label><input name="last_name" className="input" defaultValue={profile.last_name ?? ''}/></div>
           <div className="field span-all"><label>Email</label><input className="input" defaultValue={email} disabled/></div>
-          <div className="field span-all"><label>{lang === 'fr' ? 'Téléphone' : 'Phone'}</label><input name="phone" className="input" defaultValue={profile.phone ?? ''} placeholder="+229 01 97 12 34 56"/></div>
+          <div className="field span-all"><label>{lang === 'fr' ? 'Téléphone' : 'Phone'}</label><input name="phone" className="input" defaultValue={profile.phone ?? ''} placeholder="+229 01 49 44 67 20"/></div>
           {savedMsg && <p className="span-all mute" style={{ fontSize: 13 }}>{savedMsg}</p>}
           {saveErr && <p className="span-all" style={{ fontSize: 13, color: '#a63d2a' }}>{saveErr}</p>}
           <div className="span-all row gap-3">
