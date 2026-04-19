@@ -7,7 +7,7 @@ export const BRAND = {
   city: 'Cotonou',
   country: 'Bénin',
   address: 'Haie Vive, Cotonou',
-  contactEmail: 'contact@pirabel-one.store',
+  contactEmail: 'support@pirabel-one.store',
   phoneDisplay: '+229 01 49 44 67 20',
   whatsappNumber: '2290149446720',
   whatsappUrl: 'https://wa.me/2290149446720',
