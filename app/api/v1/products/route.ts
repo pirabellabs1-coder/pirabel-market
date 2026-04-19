@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { requireApiKey } from '@/lib/api-auth';
 
 export async function GET(request: Request) {
-  const deny = requireApiKey(request); if (deny) return deny;
+  const deny = await requireApiKey(request); if (deny) return deny;
   const { searchParams } = new URL(request.url);
   const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200);
   const offset = parseInt(searchParams.get('offset') || '0', 10);
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const deny = requireApiKey(request); if (deny) return deny;
+  const deny = await requireApiKey(request); if (deny) return deny;
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   const sb = createAdminClient();

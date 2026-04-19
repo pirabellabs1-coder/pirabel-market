@@ -1,21 +1,59 @@
 import { NextResponse } from 'next/server';
+import { createHash } from 'node:crypto';
+import { createAdminClient } from './supabase/admin';
+
+function hashKey(key: string): string {
+  return createHash('sha256').update(key).digest('hex');
+}
 
 /**
- * Gate for /api/v1/*: require a Bearer token equal to process.env.ADMIN_API_KEY.
- * Returns a NextResponse with 401 if the key is missing/invalid, otherwise null.
+ * Gate for /api/v1/*. Accepts EITHER:
+ *   - A DB-backed api_keys entry (created via /admin/api), revocable
+ *   - The legacy env var ADMIN_API_KEY (kept for bootstrap / fallback)
+ *
+ * Updates last_used_at on the DB key on every successful call.
  */
-export function requireApiKey(request: Request): NextResponse | null {
-  const expected = process.env.ADMIN_API_KEY;
-  if (!expected) {
-    return NextResponse.json({ error: 'API key not configured on server' }, { status: 503 });
-  }
+export async function requireApiKey(request: Request): Promise<NextResponse | null> {
   const header = request.headers.get('authorization') || request.headers.get('Authorization');
   if (!header?.startsWith('Bearer ')) {
     return NextResponse.json({ error: 'Missing Authorization: Bearer <key>' }, { status: 401 });
   }
   const provided = header.slice(7).trim();
-  if (provided !== expected) {
-    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+  if (!provided) {
+    return NextResponse.json({ error: 'Empty key' }, { status: 401 });
   }
-  return null;
+
+  // 1. Legacy env fallback
+  const envKey = process.env.ADMIN_API_KEY;
+  if (envKey && provided === envKey) return null;
+
+  // 2. DB lookup by hash (bypasses RLS via service_role)
+  try {
+    const sb = createAdminClient();
+    const hash = hashKey(provided);
+    const { data, error } = await sb
+      .from('api_keys')
+      .select('id, revoked_at')
+      .eq('key_hash', hash)
+      .maybeSingle();
+    if (error) {
+      return NextResponse.json({ error: 'Auth lookup failed' }, { status: 500 });
+    }
+    if (!data) {
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+    }
+    if (data.revoked_at) {
+      return NextResponse.json({ error: 'API key revoked' }, { status: 401 });
+    }
+    // Fire-and-forget last-used update
+    sb.from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('id', data.id).then(() => undefined, () => undefined);
+    return null;
+  } catch {
+    return NextResponse.json({ error: 'Auth service unavailable' }, { status: 503 });
+  }
+}
+
+/** Hash a key before storing. Exposed for the admin create flow. */
+export function hashApiKey(key: string): string {
+  return hashKey(key);
 }

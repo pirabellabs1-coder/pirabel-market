@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { requireApiKey } from '@/lib/api-auth';
 
 export async function GET(request: Request) {
-  const deny = requireApiKey(request); if (deny) return deny;
+  const deny = await requireApiKey(request); if (deny) return deny;
   const sb = createAdminClient();
   const since24h = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const since30d = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();

@@ -1,8 +1,14 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
+import { ApiKeysManager } from './_keys-manager';
 
 type Lang = 'curl' | 'js' | 'python';
+
+type ApiKeyRow = {
+  id: string; name: string; prefix: string;
+  created_at: string; last_used_at: string | null; revoked_at: string | null;
+};
 
 const SAMPLES = {
   list_products: {
@@ -187,8 +193,9 @@ const { data, count } = await res.json();`,
 
 type SampleKey = keyof typeof SAMPLES;
 
-export function ApiDocs({ keyPresent, maskedKey, site }: { keyPresent: boolean; maskedKey: string; site: string }) {
-  const keyDisplay = keyPresent ? maskedKey : 'TA_CLE_API';
+export function ApiDocs({ keys, site }: { keys: ApiKeyRow[]; site: string }) {
+  const activeKeys = keys.filter(k => !k.revoked_at);
+  const keyDisplay = activeKeys[0]?.prefix ? `${activeKeys[0].prefix}…` : 'TA_CLE_API';
   const [active, setActive] = useState<SampleKey>('list_products');
   const [lang, setLang] = useState<Lang>('curl');
   const [copied, setCopied] = useState<string | null>(null);
@@ -209,31 +216,30 @@ export function ApiDocs({ keyPresent, maskedKey, site }: { keyPresent: boolean; 
         <p className="mute">REST API complète pour tes produits, commandes et stats. Idéale pour compta, mobile, POS, Zapier, n8n.</p>
       </div>
 
-      {/* ── Key card ── */}
-      <div className="admin-card" style={{ background: keyPresent ? 'var(--ivory)' : '#fce8e8' }}>
+      {/* ── Base URL card ── */}
+      <div className="admin-card">
         <div className="row between wrap gap-3">
           <div>
-            <div className="caps mute" style={{ fontSize: 10, marginBottom: 6 }}>Clé API</div>
-            {keyPresent ? (
-              <div className="mono" style={{ fontSize: 16, fontWeight: 500 }}>{maskedKey}</div>
-            ) : (
-              <div style={{ color: '#a63d2a' }}>Pas encore configurée</div>
-            )}
+            <div className="caps mute" style={{ fontSize: 10, marginBottom: 6 }}>Base URL</div>
+            <code className="mono" style={{ fontSize: 15, fontWeight: 500 }}>{site}</code>
           </div>
-          <div className="caps mute" style={{ fontSize: 10, alignSelf: 'center' }}>
-            Base URL · <code className="mono" style={{ fontSize: 13, background: 'var(--ivory-2)', padding: '2px 8px' }}>{site}</code>
+          <div>
+            <div className="caps mute" style={{ fontSize: 10, marginBottom: 6 }}>Clés actives</div>
+            <div style={{ fontSize: 15, fontWeight: 500 }}>{activeKeys.length}</div>
           </div>
         </div>
-        {keyPresent && (
-          <p className="mute mt-4" style={{ fontSize: 12 }}>
-            La clé complète est stockée dans <code>ADMIN_API_KEY</code> sur Vercel (chiffrée).
-            Pour la rotation, demande-moi « rotate api key » et je régénère + redéploie.
-          </p>
-        )}
       </div>
 
+      {/* ── Keys management ── */}
+      <Section n="1" title="Gestion des clés">
+        <p className="mute mb-4" style={{ fontSize: 13 }}>
+          Crée une clé par intégration (Zapier, app mobile, outil compta…). Révoque à tout moment sans toucher aux autres. Les clés sont hashées en base — le code clair n&apos;apparaît qu&apos;une seule fois à la création.
+        </p>
+        <ApiKeysManager keys={keys}/>
+      </Section>
+
       {/* ── Auth ── */}
-      <Section n="1" title="Authentification">
+      <Section n="2" title="Authentification">
         <p>Toute requête vers <code>/api/v1/*</code> doit inclure le header :</p>
         <CodeBlock
           code={`Authorization: Bearer ${keyDisplay}`}
@@ -246,7 +252,7 @@ export function ApiDocs({ keyPresent, maskedKey, site }: { keyPresent: boolean; 
       </Section>
 
       {/* ── Endpoint browser ── */}
-      <Section n="2" title="Endpoints & exemples">
+      <Section n="3" title="Endpoints & exemples">
         <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20 }} className="grid-form">
           {/* Endpoint picker */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -317,7 +323,7 @@ export function ApiDocs({ keyPresent, maskedKey, site }: { keyPresent: boolean; 
       </Section>
 
       {/* ── Common responses ── */}
-      <Section n="3" title="Codes de retour">
+      <Section n="4" title="Codes de retour">
         <table className="admin-table">
           <thead><tr><th>Code</th><th>Signification</th></tr></thead>
           <tbody>
@@ -333,7 +339,7 @@ export function ApiDocs({ keyPresent, maskedKey, site }: { keyPresent: boolean; 
       </Section>
 
       {/* ── Rate limit / SLA ── */}
-      <Section n="4" title="Bonnes pratiques">
+      <Section n="5" title="Bonnes pratiques">
         <ul style={{ marginLeft: 20, lineHeight: 1.8 }}>
           <li>Pagine les listes (<code>limit</code> max 200, utilise <code>offset</code>)</li>
           <li>Utilise <code>since=ISO-date</code> sur <code>/orders</code> pour ne récupérer que le delta</li>
