@@ -4,6 +4,7 @@ import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createJournalPost, updateJournalPost } from '../actions';
 import { RichEditor } from '@/components/rich-editor';
+import { ImageInput } from '../produits/_image-input';
 
 type PostInput = {
   id?: string;
@@ -24,7 +25,6 @@ export function JournalForm({ post }: { post?: PostInput }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [cover, setCover] = useState(post?.cover_img ?? '');
   const [bodyFr, setBodyFr] = useState(post?.body_fr ?? '');
   const [bodyEn, setBodyEn] = useState(post?.body_en ?? '');
   const editing = !!post?.id;
@@ -62,11 +62,7 @@ export function JournalForm({ post }: { post?: PostInput }) {
         <div className="field"><label>Auteur</label>
           <input className="input" name="author" defaultValue={post?.author ?? 'Pirabel'}/>
         </div>
-        <div className="field">
-          <label>Image de couverture (URL)</label>
-          <input className="input" type="url" name="cover_img" value={cover} onChange={e => setCover(e.target.value)} placeholder="https://…"/>
-          {cover && <div style={{ marginTop: 8, width: 180, aspectRatio: '3/2', overflow: 'hidden', background: 'var(--ivory-2)' }}><img src={cover} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/></div>}
-        </div>
+        <ImageInput name="cover_img" label="Image de couverture" defaultValue={post?.cover_img ?? ''}/>
 
         <div className="field span-all">
           <label>Extrait (FR)</label>

@@ -4,6 +4,7 @@ import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createProduct, updateProduct } from '../actions';
 import { ImageInput } from './_image-input';
+import { ColorsInput, SizesInput, TagSelect } from './_pickers';
 
 type Category = { id: string; fr: string };
 
@@ -31,9 +32,6 @@ export function ProductForm({ product, categories }: { product?: ProductInput; c
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const editing = !!product?.id;
-
-  const sizesStr = product?.sizes?.join(', ') ?? '';
-  const colorsStr = product?.colors?.map(c => `${c.n}:${c.c}`).join(', ') ?? '';
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -94,24 +92,14 @@ export function ProductForm({ product, categories }: { product?: ProductInput; c
         <ImageInput name="img" label="Image principale" required defaultValue={product?.img ?? ''}/>
         <ImageInput name="img2" label="Image secondaire (hover)" defaultValue={product?.img2 ?? ''}/>
 
-        <div className="field">
-          <label>Tag (ex: Nouveau)</label>
-          <input className="input" name="tag" defaultValue={product?.tag ?? ''} placeholder="Nouveau, Édition limitée, Artisanat…"/>
-        </div>
+        <TagSelect name="tag" initial={product?.tag ?? ''}/>
         <div className="field">
           <label>Stock (−1 = illimité)</label>
           <input className="input" name="stock" type="number" defaultValue={product?.stock ?? 0}/>
         </div>
 
-        <div className="field span-all">
-          <label>Tailles (séparées par virgule)</label>
-          <input className="input" name="sizes" defaultValue={sizesStr} placeholder="39, 40, 41, 42 ou S, M, L"/>
-        </div>
-
-        <div className="field span-all">
-          <label>Couleurs (format : Nom:#hex, séparées par virgule)</label>
-          <input className="input" name="colors" defaultValue={colorsStr} placeholder="Noir:#1a1712, Cognac:#8b5a2b, Ivoire:#f4f1ea"/>
-        </div>
+        <SizesInput name="sizes" initial={product?.sizes ?? []}/>
+        <ColorsInput name="colors" initial={product?.colors ?? []}/>
 
         <div className="field span-all row gap-3" style={{ flexDirection: 'row', alignItems: 'center' }}>
           <input type="checkbox" name="published" id="published" defaultChecked={product?.published ?? true} style={{ width: 18, height: 18 }}/>

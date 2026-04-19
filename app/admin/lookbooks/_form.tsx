@@ -4,6 +4,7 @@ import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { RichEditor } from '@/components/rich-editor';
 import { createLookbook, updateLookbook } from '../actions';
+import { ImageInput } from '../produits/_image-input';
 import type { Product } from '@/lib/types';
 import { fmt } from '@/lib/format';
 
@@ -20,7 +21,6 @@ export function LookbookForm({ lookbook, products }: { lookbook?: LookbookInput;
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [cover, setCover] = useState(lookbook?.cover_img ?? '');
   const [descFr, setDescFr] = useState(lookbook?.description_fr ?? '');
   const [descEn, setDescEn] = useState(lookbook?.description_en ?? '');
   const [selected, setSelected] = useState<Set<string>>(new Set(lookbook?.product_ids ?? []));
@@ -68,10 +68,7 @@ export function LookbookForm({ lookbook, products }: { lookbook?: LookbookInput;
         <div className="field"><label>Slug URL *</label>
           <input className="input" name="slug" required defaultValue={lookbook?.slug ?? ''} placeholder="dimanche-a-cotonou"/>
         </div>
-        <div className="field"><label>Image de couverture (URL)</label>
-          <input className="input" type="url" name="cover_img" value={cover} onChange={e => setCover(e.target.value)}/>
-          {cover && <div style={{ marginTop: 8, width: 180, aspectRatio: '3/2', overflow: 'hidden' }}><img src={cover} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}/></div>}
-        </div>
+        <ImageInput name="cover_img" label="Image de couverture" defaultValue={lookbook?.cover_img ?? ''}/>
 
         <div className="field span-all">
           <label>Texte d&apos;accompagnement (FR)</label>

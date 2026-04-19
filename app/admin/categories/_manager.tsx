@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type FormEvent } from 'react';
 import { createCategory, updateCategory, deleteCategory } from '../actions';
+import { ImageInput } from '../produits/_image-input';
 
 type Cat = { id: string; fr: string; en: string; img: string | null; sort_order: number };
 
@@ -58,7 +59,7 @@ export function CategoriesManager({ categories }: { categories: Cat[] }) {
                   <form onSubmit={(e) => onUpdate(c.id, e)} className="grid-form" style={{ padding: 16 }}>
                     <div className="field"><label>Français *</label><input name="fr" required className="input" defaultValue={c.fr}/></div>
                     <div className="field"><label>Anglais</label><input name="en" className="input" defaultValue={c.en}/></div>
-                    <div className="field span-all"><label>URL image</label><input name="img" type="url" className="input" defaultValue={c.img ?? ''}/></div>
+                    <ImageInput name="img" label="Image de la catégorie" defaultValue={c.img ?? ''}/>
                     <div className="field"><label>Ordre</label><input name="sort_order" type="number" className="input" defaultValue={c.sort_order}/></div>
                     <div className="span-all row gap-3">
                       <button type="submit" className="btn btn-primary" disabled={pending}>Enregistrer</button>
@@ -91,7 +92,7 @@ export function CategoriesManager({ categories }: { categories: Cat[] }) {
                     <div className="field"><label>Ordre</label><input name="sort_order" type="number" className="input" defaultValue={categories.length + 1}/></div>
                     <div className="field"><label>Français *</label><input name="fr" required className="input"/></div>
                     <div className="field"><label>Anglais</label><input name="en" className="input"/></div>
-                    <div className="field span-all"><label>URL image</label><input name="img" type="url" className="input" placeholder="https://…"/></div>
+                    <ImageInput name="img" label="Image de la catégorie" defaultValue=""/>
                     <div className="span-all row gap-3">
                       <button type="submit" className="btn btn-primary" disabled={pending}>Créer</button>
                       <button type="button" className="btn btn-ghost" onClick={() => setAdding(false)}>Annuler</button>
