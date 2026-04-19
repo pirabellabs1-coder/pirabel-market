@@ -4,8 +4,9 @@ import { fmt } from './format';
 const apiKey = process.env.RESEND_API_KEY;
 const resend = apiKey ? new Resend(apiKey) : null;
 
-const FROM = 'Pirabel <onboarding@resend.dev>'; // replace with verified domain later
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'pirabellabs@gmail.com';
+// Use verified domain when EMAIL_FROM is set; fallback to Resend's shared sender.
+const FROM = process.env.EMAIL_FROM || 'Pirabel <onboarding@resend.dev>';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'support@pirabel-one.store';
 
 type OrderItem = { name: string; qty: number; price: number; size?: string | null; color?: string | null; img?: string | null };
 
@@ -100,7 +101,7 @@ export async function sendOrderConfirmation(order: Order) {
     </div>
 
     <div style="margin-top:32px;text-align:center;">
-      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://pirabel-market.vercel.app'}/suivi?id=${encodeURIComponent(order.id)}"
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://pirabel-one.store'}/suivi?id=${encodeURIComponent(order.id)}"
          style="display:inline-block;background:#14110d;color:#f7f3ec;padding:14px 28px;text-decoration:none;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;">
         Suivre ma commande
       </a>
@@ -136,7 +137,7 @@ export async function sendOrderConfirmation(order: Order) {
         <div style="margin-top:8px;font-size:12px;">Paiement : ${escape(PAY_LABEL[order.payment_method] ?? order.payment_method)}</div>
       </div>
       <div style="margin-top:24px;text-align:center;">
-        <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://pirabel-market.vercel.app'}/admin/commandes/${encodeURIComponent(order.id)}"
+        <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://pirabel-one.store'}/admin/commandes/${encodeURIComponent(order.id)}"
            style="display:inline-block;background:#14110d;color:#f7f3ec;padding:12px 24px;text-decoration:none;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;">
           Voir dans l'admin
         </a>
@@ -163,7 +164,7 @@ export async function sendOrderStatusUpdate(order: Order & { status: string }, p
     <h1 style="font-family:Georgia,serif;font-size:26px;font-weight:400;margin:0 0 12px;">${escape(label)}.</h1>
     <p style="font-size:14px;color:#2c2821;line-height:1.6;">Votre commande <strong style="font-family:monospace;">${escape(order.id)}</strong> vient de passer à l&apos;état <strong>${escape(label)}</strong>.</p>
     <div style="margin-top:24px;text-align:center;">
-      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://pirabel-market.vercel.app'}/suivi?id=${encodeURIComponent(order.id)}"
+      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://pirabel-one.store'}/suivi?id=${encodeURIComponent(order.id)}"
          style="display:inline-block;background:#14110d;color:#f7f3ec;padding:12px 24px;text-decoration:none;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;">
         Suivre ma commande
       </a>

@@ -43,7 +43,7 @@ export function Footer() {
             <ul>
               <li>Haie Vive, Cotonou</li>
               <li>+229 01 97 12 34 56</li>
-              <li>contact@pirabel.bj</li>
+              <li>support@pirabel-one.store</li>
               <li style={{ marginTop: 8 }}><a href="https://wa.me/2290197123456" target="_blank" rel="noopener">WhatsApp</a></li>
             </ul>
           </div>

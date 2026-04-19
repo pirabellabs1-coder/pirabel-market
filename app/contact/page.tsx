@@ -25,7 +25,7 @@ export default function ContactPage() {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div><div className="caps mute mb-2">WhatsApp</div><div>+229 01 97 12 34 56</div></div>
-            <div><div className="caps mute mb-2">Email</div><div>contact@pirabel.bj</div></div>
+            <div><div className="caps mute mb-2">Email</div><div>support@pirabel-one.store</div></div>
             <div><div className="caps mute mb-2">{lang === 'fr' ? 'Adresse' : 'Address'}</div><div>Haie Vive, Cotonou · Bénin</div></div>
           </div>
         </div>
