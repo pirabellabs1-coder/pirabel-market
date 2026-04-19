@@ -24,7 +24,10 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
           <h1 className="mono">{order.id}</h1>
           <p className="mute">{new Date(order.created_at).toLocaleString('fr-FR')}</p>
         </div>
-        <Link className="btn btn-ghost" href="/admin/commandes">← Toutes les commandes</Link>
+        <div className="row gap-2 wrap">
+          <Link className="btn btn-outline" href={`/admin/commandes/${order.id}/facture`}>📄 Facture</Link>
+          <Link className="btn btn-ghost" href="/admin/commandes">← Toutes les commandes</Link>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24 }} className="grid-form">

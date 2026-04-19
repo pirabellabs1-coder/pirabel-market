@@ -3,6 +3,7 @@
 import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createJournalPost, updateJournalPost } from '../actions';
+import { RichEditor } from '@/components/rich-editor';
 
 type PostInput = {
   id?: string;
@@ -24,12 +25,17 @@ export function JournalForm({ post }: { post?: PostInput }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [cover, setCover] = useState(post?.cover_img ?? '');
+  const [bodyFr, setBodyFr] = useState(post?.body_fr ?? '');
+  const [bodyEn, setBodyEn] = useState(post?.body_en ?? '');
   const editing = !!post?.id;
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     const fd = new FormData(e.currentTarget);
+    // Inject rich editor HTML (form inputs can't read from non-input controls)
+    fd.set('body_fr', bodyFr);
+    fd.set('body_en', bodyEn);
     start(async () => {
       try {
         if (editing) await updateJournalPost(post!.id!, fd);
@@ -41,24 +47,19 @@ export function JournalForm({ post }: { post?: PostInput }) {
   return (
     <form onSubmit={onSubmit} className="admin-card">
       <div className="grid-form">
-        <div className="field span-all">
-          <label>Titre (Français) *</label>
+        <div className="field span-all"><label>Titre (Français) *</label>
           <input className="input" name="title_fr" required defaultValue={post?.title_fr ?? ''}/>
         </div>
-        <div className="field span-all">
-          <label>Titre (Anglais)</label>
+        <div className="field span-all"><label>Titre (Anglais)</label>
           <input className="input" name="title_en" defaultValue={post?.title_en ?? ''}/>
         </div>
-        <div className="field">
-          <label>Slug URL *</label>
+        <div className="field"><label>Slug URL *</label>
           <input className="input" name="slug" required defaultValue={post?.slug ?? ''} placeholder="patine-du-cuir"/>
         </div>
-        <div className="field">
-          <label>Catégorie</label>
+        <div className="field"><label>Catégorie</label>
           <input className="input" name="category" defaultValue={post?.category ?? ''} placeholder="Savoir-faire"/>
         </div>
-        <div className="field">
-          <label>Auteur</label>
+        <div className="field"><label>Auteur</label>
           <input className="input" name="author" defaultValue={post?.author ?? 'Pirabel'}/>
         </div>
         <div className="field">
@@ -73,14 +74,14 @@ export function JournalForm({ post }: { post?: PostInput }) {
         </div>
 
         <div className="field span-all">
-          <label>Contenu (Markdown, FR) *</label>
-          <textarea className="textarea" name="body_fr" rows={14} required defaultValue={post?.body_fr ?? ''} style={{ fontFamily: 'monospace', fontSize: 13 }} placeholder={`# Titre principal\n\nTon texte ici. Tu peux écrire en **gras** ou en *italique*.\n\n## Sous-titre\n\n- Une liste\n- D'éléments\n\n![légende](https://image.jpg)`}/>
-          <p className="mute mt-2" style={{ fontSize: 11 }}>Markdown supporté : **gras**, *italique*, # titres, [liens](url), ![image](url), listes, citations &gt;.</p>
+          <label>Contenu (FR) *</label>
+          <RichEditor value={bodyFr} onChange={setBodyFr} minHeight={380} placeholder="Écris ton article…"/>
+          <p className="mute mt-2" style={{ fontSize: 11 }}>Utilise la barre d&apos;outils : titres, listes, liens, images (téléverser ou URL), citations.</p>
         </div>
 
         <div className="field span-all">
-          <label>Contenu (Markdown, EN)</label>
-          <textarea className="textarea" name="body_en" rows={8} defaultValue={post?.body_en ?? ''} style={{ fontFamily: 'monospace', fontSize: 13 }}/>
+          <label>Contenu (EN, optionnel)</label>
+          <RichEditor value={bodyEn} onChange={setBodyEn} minHeight={240} placeholder="Optional English translation…"/>
         </div>
 
         <div className="field span-all row gap-3" style={{ flexDirection: 'row', alignItems: 'center' }}>

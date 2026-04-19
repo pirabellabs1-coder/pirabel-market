@@ -5,6 +5,13 @@ import { renderMarkdown } from '@/lib/markdown';
 
 export const revalidate = 60;
 
+// Body may be legacy markdown OR rich editor HTML. Detect by first char.
+function renderBody(raw: string): string {
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('<')) return trimmed;
+  return renderMarkdown(raw);
+}
+
 type PageProps = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: PageProps) {
@@ -31,7 +38,7 @@ export default async function JournalPostPage({ params }: PageProps) {
 
   if (!post) notFound();
 
-  const bodyHtml = renderMarkdown(post.body_fr || '');
+  const bodyHtml = renderBody(post.body_fr || '');
 
   return (
     <main>
